@@ -172,7 +172,7 @@ spec:
       - ReadWriteOnce
       resources:
         requests:
-          storage: 1
+          storage: "10Gi"
       storageClassName: localfile
       volumeMode: Filesystem
   storageDeviceSets:
@@ -183,7 +183,7 @@ spec:
         - ReadWriteOnce
         resources:
           requests:
-            storage: 1
+            storage: "10Gi"
         storageClassName: localblock
         volumeMode: Block
     name: ocs-deviceset
