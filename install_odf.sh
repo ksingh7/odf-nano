@@ -195,7 +195,7 @@ spec:
         cpu: "1"
         memory: "1Gi"
       requests:
-        cpu: "1 "
+        cpu: "1"
         memory: "1Gi"
 EOF
 
