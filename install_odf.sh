@@ -158,6 +158,14 @@ metadata:
   namespace: openshift-storage
 spec:
   manageNodes: false
+  resources:
+    mds:
+      limits:
+        cpu: "1"
+        memory: "1Gi"
+      requests:
+        cpu: "1"
+        memory: "1Gi"
   monPVCTemplate:
     spec:
       accessModes:
@@ -168,7 +176,7 @@ spec:
       storageClassName: localfile
       volumeMode: Filesystem
   storageDeviceSets:
-  - count: 1
+  - count: 3
     dataPVCTemplate:
       spec:
         accessModes:
@@ -181,8 +189,14 @@ spec:
     name: ocs-deviceset
     placement: {}
     portable: false
-    replica: 1
-    resources: {}
+    replica: 2
+    resources:
+      limits:
+        cpu: "1"
+        memory: "1Gi"
+      requests:
+        cpu: "1 "
+        memory: "1Gi"
 EOF
 
 echo "ODF is installing now, please be patient"
