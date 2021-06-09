@@ -82,7 +82,7 @@ metadata:
   name: local-pv-vdb
 spec:
   capacity:
-    storage: 10Gi
+    storage: 50Gi
   volumeMode: Block
   accessModes:
   - ReadWriteOnce
@@ -105,7 +105,7 @@ metadata:
   name: local-pv-vdc
 spec:
   capacity:
-    storage: 10Gi
+    storage: 50Gi
   volumeMode: Block
   accessModes:
   - ReadWriteOnce
@@ -128,7 +128,7 @@ metadata:
   name: local-pv-vdd
 spec:
   capacity:
-    storage: 10Gi
+    storage: 50Gi
   volumeMode: Block
   accessModes:
   - ReadWriteOnce
