@@ -9,9 +9,9 @@ crc config set cpus 15
 crc config set memory 60000
 crc config view
 crc setup
-crc start  --log-level debug -p ~/.crc/pull-secret.txt
 alias start='start  --log-level debug -p ~/.crc/pull-secret.txt'
 alias crcssh='ssh -i ~/.crc/machines/crc/id_ecdsa core@"$(crc ip)"'
+crc start
 crcssh uptime
 ```
 
