@@ -236,3 +236,35 @@ ODF is installed now
 ```
 oc get sc
 ```
+
+## Uninstall ODF
+```
+
+oc annotate storagecluster ocs-storagecluster uninstall.ocs.openshift.io/cleanup-policy="delete" --overwrite storagecluster.ocs.openshift.io/ocs-storagecluster annotated
+
+oc annotate storagecluster ocs-storagecluster uninstall.ocs.openshift.io/mode="forced" --overwrite storagecluster.ocs.openshift.io/ocs-storagecluster annotated
+
+for i in $(oc get node -l cluster.ocs.openshift.io/openshift-storage= -o jsonpath='{ .items[*].metadata.name }'); do oc debug node/${i} -- chroot /host  ls -l /var/lib/rook; done
+
+oc project default
+
+oc delete project openshift-storage --wait=true --timeout=1m
+
+oc delete storageclass openshift-storage.noobaa.io --wait=true --timeout=1m
+
+oc delete crd backingstores.noobaa.io bucketclasses.noobaa.io cephblockpools.ceph.rook.io cephclusters.ceph.rook.io cephfilesystems.ceph.rook.io cephnfses.ceph.rook.io cephobjectstores.ceph.rook.io cephobjectstoreusers.ceph.rook.io noobaas.noobaa.io ocsinitializations.ocs.openshift.io storageclusters.ocs.openshift.io cephclients.ceph.rook.io cephobjectrealms.ceph.rook.io cephobjectzonegroups.ceph.rook.io cephobjectzones.ceph.rook.io cephrbdmirrors.ceph.rook.io --wait=true --timeout=1m
+
+for resource in $(oc api-resources --namespaced=true -o name); do echo "Retrieving $resource" && oc get $resource ; done;
+
+export SC=localblock
+oc get pv | grep $SC | awk '{print $1}'| xargs oc delete pv
+oc delete sc $SC
+[[ ! -z $SC ]] && for i in $(oc get node -l cluster.ocs.openshift.io/openshift-storage= -o jsonpath='{ .items[*].metadata.name }'); do oc debug node/${i} -- chroot /host rm -rfv /mnt/local-storage/${SC}/; done
+oc delete localvolumediscovery.local.storage.openshift.io/auto-discover-devices -n openshift-local-storage
+
+LV=local-block
+SC=localblock
+oc delete pv -l storage.openshift.com/local-volume-owner-name=${LV} --wait --timeout=5m
+oc delete storageclass $SC --wait --timeout=5m
+[[ ! -z $SC ]] && for i in $(oc get node -l cluster.ocs.openshift.io/openshift-storage= -o jsonpath='{ .items[*].metadata.name }'); do oc debug node/${i} -- chroot /host rm -rfv /mnt/local-storage/${SC}/; done
+```
