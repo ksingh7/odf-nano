@@ -1,13 +1,17 @@
 # Deploying CRC
 
 ```
+mkdir ~/.crc
+cd ~/.crc
 crc config set consent-telemetry no
 crc config set enable-cluster-monitoring true
 crc config set cpus 15
 crc config set memory 60000
 crc config view
 crc setup
-crc start  --log-level debug -p /mnt/hdd_space1/pull-secret.txt
+crc start  --log-level debug -p ~/.crc/pull-secret.txt
+alias crcssh='ssh -i ~/.crc/machines/crc/id_ecdsa core@"$(crc ip)"'
+crcssh uptime
 ```
 
 - If running out of space, create a symlink for .crc
@@ -19,7 +23,7 @@ ln -s /mnt/hdd_space1/.crc ~/.crc
 - Deep clean previous instance of crc
 ```
 crc delete -f
-rm -rf .crc/* -v !(".crc/cache/*.crcbundle")
+rm -rf .crc/* -v !(".crc/cache/*.crcbundle | pull-secret.txt")
 #rm -rf /mnt/hdd_space1/.crc/*
 sudo virsh list --all
 sudo virsh destroy crc
@@ -147,7 +151,7 @@ Access https://console-openshift-console.apps-crc.testing from client machine
 - CRC prerequisite for ODF
 
 ```
-alias crcssh='ssh -i ~/.crc/machines/crc/id_ecdsa core@"$(crc ip)"'
+
 crc stop
 virsh list
 virsh dumpxml crc > crc.xml
