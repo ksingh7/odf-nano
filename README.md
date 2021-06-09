@@ -18,6 +18,7 @@ ln -s /mnt/hdd_space1/.crc ~/.crc
 
 - Deep clean previous instance of crc
 ```
+crc delete -f
 rm -rf /mnt/hdd_space1/.crc/*
 sudo virsh list --all
 sudo virsh destroy crc
