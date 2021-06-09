@@ -148,23 +148,6 @@ Access https://console-openshift-console.apps-crc.testing from client machine
 
 ```
 alias crcssh='ssh -i ~/.crc/machines/crc/id_ecdsa core@"$(crc ip)"'
-
-crc stop
-virsh list
-virsh dumpxml crc > crc.xml
-vim crc.xml
-- In the <devices> section add the following to the crc.xml configuration file and save the changes:
-
-  <devices>
-    <controller type='pci' model='pci-bridge'/>
-  </devices>
-
-    <controller type='pci' index='0' model='pci-bridge'>
-      <model name='pcie-root-port'/>
-      <target chassis='6' port='0x15'/>
-      <address type='pci' domain='0x0000' bus='0x05' slot='0x00' function='0x0'/>
-    </controller>
-
 crc stop
 virsh list
 virsh dumpxml crc > crc.xml
