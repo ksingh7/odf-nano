@@ -45,17 +45,15 @@ Access https://console-openshift-console.apps-crc.testing from client machine
 - CRC prerequisite for ODF
 
 ```
-
-crc stop
-virsh list
-virsh dumpxml crc > crc.xml
-vim crc.xml
-
 ## Don't worry this is thin provisioned
 sudo -S qemu-img create -f raw ~/.crc/vdb 50G
 sudo -S qemu-img create -f raw ~/.crc/vdc 50G
 sudo -S qemu-img create -f raw ~/.crc/vdd 50G
 
+crc stop
+virsh list
+virsh dumpxml crc > crc.xml
+vim crc.xml
 
     <disk type='file' device='disk'>
       <driver name='qemu' type='raw' cache='none'/>
