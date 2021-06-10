@@ -37,6 +37,87 @@ sudo virsh undefine crc
 ssh -i ~/.crc/machines/crc/id_ecdsa core@"$(crc ip)"
 ```
 
+### Finally access the dashboard
+Access https://console-openshift-console.apps-crc.testing from client machine
+
+## OpenShift Data Foundation on CRC
+
+- CRC prerequisite for ODF
+
+```
+
+crc stop
+virsh list
+virsh dumpxml crc > crc.xml
+vim crc.xml
+
+## Don't worry this is thin provisioned
+sudo -S qemu-img create -f raw ~/.crc/vdb 50G
+sudo -S qemu-img create -f raw ~/.crc/vdc 50G
+sudo -S qemu-img create -f raw ~/.crc/vdd 50G
+
+
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='raw' cache='none'/>
+      <source file='/mnt/hdd_space1/mohit/.crc/vdb' index='1'/>
+      <backingStore/>
+      <target dev='vdb' bus='virtio'/>
+      <alias name='virtio-disk1'/>
+      <address type='pci' domain='0x0000' bus='0x05' slot='0x00' function='0x0'/>
+    </disk>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='raw' cache='none'/>
+      <source file='/mnt/hdd_space1/mohit/.crc/vdc' index='2/>
+      <backingStore/>
+      <target dev='vdc' bus='virtio'/>
+      <alias name='virtio-disk2'/>
+      <address type='pci' domain='0x0000' bus='0x06' slot='0x00' function='0x0'/>
+    </disk>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='raw' cache='none'/>
+      <source file='/mnt/hdd_space1/mohit/.crc/vdd' index='3'/>
+      <backingStore/>
+      <target dev='vdd' bus='virtio'/>
+      <alias name='virtio-disk3'/>
+      <address type='pci' domain='0x0000' bus='0x07' slot='0x00' function='0x0'/>
+    </disk>
+
+virsh define crc.xml
+
+crc start
+
+crcssh lsblk
+```
+
+- Deploy ODF on CRC
+
+```
+## Login to CRC
+oc login -u kubeadmin -p P3EpZ-pGpYf-ITy8f-7t6NE https://api.crc.testing:6443
+
+
+sh install_odf.sh
+```
+- Sample output
+```
+Setting up environment for ODF - this will take a few minutes
+subscription.operators.coreos.com/ocs-subscription created
+Waiting for operators to be ready
+No resources found in openshift-storage namespace.
+.No resources found in openshift-storage namespace.
+...
+.No resources found in openshift-storage namespace.
+...............................Operators are ready now
+Finished up preparing the local storage
+ODF is installing now, please be patient
+ocsinitialization.ocs.openshift.io/ocsinit patched
+pod/rook-ceph-tools-7d95854fb8-b78s2 condition met
+ODF is installed now
+```
+```
+oc get sc
+```
+
 # Access CRC from a remote client
 
 ### Execute on the Host running CRC VM
@@ -145,86 +226,6 @@ scutil --dns
 ping -c 1 foo.api.crc.testing
 ping -c 1 foo.apps-crc.testing
 ping -c 1 console-openshift-console.apps-crc.testing
-```
-### Finally access the dashboard
-Access https://console-openshift-console.apps-crc.testing from client machine
-
-## OpenShift Data Foundation on CRC
-
-- CRC prerequisite for ODF
-
-```
-
-crc stop
-virsh list
-virsh dumpxml crc > crc.xml
-vim crc.xml
-
-## Don't worry this is thin provisioned
-sudo -S qemu-img create -f raw ~/.crc/vdb 50G
-sudo -S qemu-img create -f raw ~/.crc/vdc 50G
-sudo -S qemu-img create -f raw ~/.crc/vdd 50G
-
-
-    <disk type='file' device='disk'>
-      <driver name='qemu' type='raw' cache='none'/>
-      <source file='/mnt/hdd_space1/mohit/.crc/vdb' index='1'/>
-      <backingStore/>
-      <target dev='vdb' bus='virtio'/>
-      <alias name='virtio-disk1'/>
-      <address type='pci' domain='0x0000' bus='0x05' slot='0x00' function='0x0'/>
-    </disk>
-    <disk type='file' device='disk'>
-      <driver name='qemu' type='raw' cache='none'/>
-      <source file='/mnt/hdd_space1/mohit/.crc/vdc' index='2/>
-      <backingStore/>
-      <target dev='vdc' bus='virtio'/>
-      <alias name='virtio-disk2'/>
-      <address type='pci' domain='0x0000' bus='0x06' slot='0x00' function='0x0'/>
-    </disk>
-    <disk type='file' device='disk'>
-      <driver name='qemu' type='raw' cache='none'/>
-      <source file='/mnt/hdd_space1/mohit/.crc/vdd' index='3'/>
-      <backingStore/>
-      <target dev='vdd' bus='virtio'/>
-      <alias name='virtio-disk3'/>
-      <address type='pci' domain='0x0000' bus='0x07' slot='0x00' function='0x0'/>
-    </disk>
-
-virsh define crc.xml
-
-crc start
-
-crcssh lsblk
-```
-
-- Deploy ODF on CRC
-
-```
-## Login to CRC
-oc login -u kubeadmin -p P3EpZ-pGpYf-ITy8f-7t6NE https://api.crc.testing:6443
-
-
-sh install_odf.sh
-```
-- Sample output
-```
-Setting up environment for ODF - this will take a few minutes
-subscription.operators.coreos.com/ocs-subscription created
-Waiting for operators to be ready
-No resources found in openshift-storage namespace.
-.No resources found in openshift-storage namespace.
-...
-.No resources found in openshift-storage namespace.
-...............................Operators are ready now
-Finished up preparing the local storage
-ODF is installing now, please be patient
-ocsinitialization.ocs.openshift.io/ocsinit patched
-pod/rook-ceph-tools-7d95854fb8-b78s2 condition met
-ODF is installed now
-```
-```
-oc get sc
 ```
 
 ## Uninstall ODF
