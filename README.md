@@ -3,6 +3,8 @@
 ```
 mkdir ~/.crc
 cd ~/.crc
+#You can copy it from the Pull Secret section of https://cloud.redhat.com/openshift/create/local
+cp pull-secret.txt ~/.crc
 crc config set consent-telemetry no
 crc config set enable-cluster-monitoring true
 crc config set cpus 15
