@@ -13,12 +13,12 @@ For dev/test experimentation developers ofter need persistent storage with OpenS
 ```
 mkdir ~/.crc
 cd ~/.crc
-#You can copy it from the Pull Secret section of https://cloud.redhat.com/openshift/create/local
+#Get your pull secret from https://cloud.redhat.com/openshift/create/local and save it as `~/.crc/pull-secret.txt`
 cp pull-secret.txt ~/.crc
 crc config set consent-telemetry no
 crc config set enable-cluster-monitoring true
-crc config set cpus 15 #ChangeME
-crc config set memory 60000 #ChangeME
+crc config set cpus 15 #Change as per your HW config
+crc config set memory 60000 #Change as per your HW config
 crc config view
 crc setup
 alias start='start  --log-level debug -p ~/.crc/pull-secret.txt'
