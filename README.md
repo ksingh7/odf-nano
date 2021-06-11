@@ -4,7 +4,7 @@
 - Would you like persistent File/Block/Object Storage in your CRC Dev Environment  ..... Awesome, Now we are Talking !
 
 # Introducing ODF-Nano
-`ODF-Nano` lets you deploy `OpenShift Data Foundation` on your Laptop. 
+`ODF-Nano` lets you deploy [OpenShift Data Foundation](https://www.redhat.com/en/technologies/cloud-computing/openshift-data-foundation) on your Laptop. 
 For dev/test experimentation developers ofter need persistent storage with OpenShift (CRC). CRC did not had a persistent storage solution,  `ODF-Nano` solves persistent storage problem for CRC. 
 
 # Setup
