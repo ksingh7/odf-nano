@@ -1,8 +1,9 @@
+## Authors
+## cblum@redhat.com
+## karasing@redhat.com
+
 #!/bin/bash
-
 set +x
-
-
 echo "Setting up environment for ODF - this will take a few minutes"
 
 oc label "$(oc get no -o name)" cluster.ocs.openshift.io/openshift-storage='' --overwrite >/dev/null
