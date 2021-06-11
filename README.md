@@ -1,4 +1,14 @@
-# Deploying CRC
+# Introduction
+- Do you like OpenShift ? ..... Sweet !
+- Do you use [CRC (CodeReady Containers)](https://developers.redhat.com/products/codeready-containers/overview) for local dev/test ?  ..... Great !
+- Would you like persistent File/Block/Object Storage in your CRC Dev Environment  ..... Awesome, Now we are Talking !
+
+# Introducing ODF-Nano
+`ODF-Nano` lets you deploy `OpenShift Data Foundation` on your Laptop. 
+For dev/test experimentation developers ofter need persistent storage with OpenShift (CRC). CRC did not had a persistent storage solution,  `ODF-Nano` solves this problem for CRC. 
+
+# Setup
+## Step -1 ::  Deploy CRC
 
 ```
 mkdir ~/.crc
@@ -7,54 +17,45 @@ cd ~/.crc
 cp pull-secret.txt ~/.crc
 crc config set consent-telemetry no
 crc config set enable-cluster-monitoring true
-crc config set cpus 15
-crc config set memory 60000
+crc config set cpus 15 #ChangeME
+crc config set memory 60000 #ChangeME
 crc config view
 crc setup
 alias start='start  --log-level debug -p ~/.crc/pull-secret.txt'
 alias crcssh='ssh -i ~/.crc/machines/crc/id_ecdsa core@"$(crc ip)"'
-crc start
+alias crcstart='crc start  --log-level info -p ~/.crc/pull-secret.txt'
+crcstart
 crcssh uptime
 ```
+- Access https://console-openshift-console.apps-crc.testing from client machine
 
-- If running out of space, create a symlink for .crc
-```
-mkdir /mnt/hdd_space1/.crc
-ln -s /mnt/hdd_space1/.crc ~/.crc
-```
-
-- Deep clean previous instance of crc
+### Deep clean previous instance of crc
 ```
 crc delete -f
-rm -rf .crc/*. -v !(".crc/cache/*.crcbundle | pull-secret.txt")
-#rm -rf /mnt/hdd_space1/.crc/*
+rm -rf .crc/*. -v !(".crc/cache/*.crcbundle | pull-secret.txt") #ToTest
 sudo virsh list --all
 sudo virsh destroy crc
 sudo virsh undefine crc
 ```
-- To ssh into crc vm
-```
-ssh -i ~/.crc/machines/crc/id_ecdsa core@"$(crc ip)"
-```
-
-### Finally access the dashboard
-Access https://console-openshift-console.apps-crc.testing from client machine
-
-## OpenShift Data Foundation on CRC
-
-- CRC prerequisite for ODF
-
+## Step -2 :: Deploy ODF-Nano on CRC
+### Prerequisites
+- Create a few raw devices that ODF-Nano will use
 ```
 ## Don't worry this is thin provisioned
 sudo -S qemu-img create -f raw ~/.crc/vdb 50G
 sudo -S qemu-img create -f raw ~/.crc/vdc 50G
 sudo -S qemu-img create -f raw ~/.crc/vdd 50G
+```
 
+- Attach these devices to CRC VM
+```
 crc stop
 virsh list
 virsh dumpxml crc > crc.xml
 vim crc.xml
-
+```
+- Add the following section to `crc.xml`
+```
     <disk type='file' device='disk'>
       <driver name='qemu' type='raw' cache='none'/>
       <source file='/mnt/hdd_space1/mohit/.crc/vdb' index='1'/>
@@ -79,21 +80,25 @@ vim crc.xml
       <alias name='virtio-disk3'/>
       <address type='pci' domain='0x0000' bus='0x07' slot='0x00' function='0x0'/>
     </disk>
-
+```
+- Apply XML file and start CRC
+```
 virsh define crc.xml
-
 crc start
-
+```
+- List devices to verify
+```
 crcssh lsblk
 ```
+### Deploy ODF-Naon  on CRC
 
-- Deploy ODF on CRC
+-  Login to CRC using `kubeadmin`
+`oc login -u kubeadmin -p <PWD> https://api.crc.testing:6443`
 
+- Get `odf-nano`
 ```
-## Login to CRC
-oc login -u kubeadmin -p P3EpZ-pGpYf-ITy8f-7t6NE https://api.crc.testing:6443
-
-
+git clone https://github.com/ksingh7/odf-nano.git
+cd odf-nano
 sh install_odf.sh
 ```
 - Sample output
@@ -105,20 +110,22 @@ No resources found in openshift-storage namespace.
 .No resources found in openshift-storage namespace.
 ...
 .No resources found in openshift-storage namespace.
-...............................Operators are ready now
+...............................
+Operators are ready now
 Finished up preparing the local storage
 ODF is installing now, please be patient
 ocsinitialization.ocs.openshift.io/ocsinit patched
 pod/rook-ceph-tools-7d95854fb8-b78s2 condition met
 ODF is installed now
 ```
+- Verify ODF setup
 ```
 oc get sc
 ```
 
-# Access CRC from a remote client
+## Access CRC from a remote client
 
-### Execute on the Host running CRC VM
+-  Execute on the Host running CRC VM
 ```
 export SERVER_IP=0.0.0.0
 export CRC_IP=$(crc ip)
@@ -194,7 +201,6 @@ tcp        0      0 0.0.0.0:6443            0.0.0.0:*               LISTEN      
 
 ```
 
-
 ## MACos Client Node 
 https://www.stevenrombauts.be/2018/01/use-dnsmasq-instead-of-etc-hosts/
 
@@ -226,7 +232,7 @@ ping -c 1 foo.apps-crc.testing
 ping -c 1 console-openshift-console.apps-crc.testing
 ```
 
-## Uninstall ODF
+## Uninstall ODF-Nano
 ```
 oc annotate storagecluster ocs-storagecluster uninstall.ocs.openshift.io/cleanup-policy="delete" --overwrite 
 oc annotate storagecluster ocs-storagecluster uninstall.ocs.openshift.io/mode="forced" --overwrite
@@ -272,3 +278,16 @@ for i in vdb vdc vdd  ; do crcssh sudo sgdisk --zap-all /dev/$i ; done
 for i in vdb vdc vdd  ; do crcssh sudo dd  if=/dev/zero of=/dev/$i bs=1M count=100 oflag=direct,dsync  ; done
 for i in vdb vdc vdd  ; do crcssh sudo blkdiscard /dev/$i ; done
 ```
+##  Troubleshooting
+
+- If running out of space, create a symlink for .crc
+```
+mkdir /mnt/hdd_space1/.crc
+ln -s /mnt/hdd_space1/.crc ~/.crc
+```
+
+- To ssh into crc vm
+```
+ssh -i ~/.crc/machines/crc/id_ecdsa core@"$(crc ip)"
+```
+
