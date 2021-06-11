@@ -26,7 +26,7 @@ ln -s /mnt/hdd_space1/.crc ~/.crc
 - Deep clean previous instance of crc
 ```
 crc delete -f
-rm -rf .crc/* -v !(".crc/cache/*.crcbundle | pull-secret.txt")
+rm -rf .crc/*. -v !(".crc/cache/*.crcbundle | pull-secret.txt")
 #rm -rf /mnt/hdd_space1/.crc/*
 sudo virsh list --all
 sudo virsh destroy crc
@@ -65,7 +65,7 @@ vim crc.xml
     </disk>
     <disk type='file' device='disk'>
       <driver name='qemu' type='raw' cache='none'/>
-      <source file='/mnt/hdd_space1/mohit/.crc/vdc' index='2/>
+      <source file='/mnt/hdd_space1/mohit/.crc/vdc' index='2'/>
       <backingStore/>
       <target dev='vdc' bus='virtio'/>
       <alias name='virtio-disk2'/>
@@ -228,32 +228,47 @@ ping -c 1 console-openshift-console.apps-crc.testing
 
 ## Uninstall ODF
 ```
+oc annotate storagecluster ocs-storagecluster uninstall.ocs.openshift.io/cleanup-policy="delete" --overwrite 
+oc annotate storagecluster ocs-storagecluster uninstall.ocs.openshift.io/mode="forced" --overwrite
 
-oc annotate storagecluster ocs-storagecluster uninstall.ocs.openshift.io/cleanup-policy="delete" --overwrite storagecluster.ocs.openshift.io/ocs-storagecluster annotated
+oc delete -n openshift-storage storagecluster --all  --wait=true --timeout=10s
 
-oc annotate storagecluster ocs-storagecluster uninstall.ocs.openshift.io/mode="forced" --overwrite storagecluster.ocs.openshift.io/ocs-storagecluster annotated
+for i in  storageclusters.ocs.openshift.io/ocs-storagecluster cephblockpools.ceph.rook.io/ocs-storagecluster-cephblockpool cephfilesystems.ceph.rook.io/ocs-storagecluster-cephfilesystem cephobjectstores.ceph.rook.io/ocs-storagecluster-cephobjectstore cephclusters.ceph.rook.io/ocs-storagecluster-cephcluster ; do oc delete $i --wait=true --timeout=10s ; done
 
-for i in $(oc get node -l cluster.ocs.openshift.io/openshift-storage= -o jsonpath='{ .items[*].metadata.name }'); do oc debug node/${i} -- chroot /host  ls -l /var/lib/rook; done
+for i in  storageclusters.ocs.openshift.io/ocs-storagecluster cephblockpools.ceph.rook.io/ocs-storagecluster-cephblockpool cephfilesystems.ceph.rook.io/ocs-storagecluster-cephfilesystem cephobjectstores.ceph.rook.io/ocs-storagecluster-cephobjectstore cephclusters.ceph.rook.io/ocs-storagecluster-cephcluster ; do oc patch $i --type json --patch='[ { "op": "remove", "path": "/metadata/finalizers" } ]'  ; done
 
-oc project default
+oc delete subscriptino ocs-subscription
+oc delete csv ocs-operator.v9.9.0
 
-oc delete project openshift-storage --wait=true --timeout=1m
 
-oc delete storageclass openshift-storage.noobaa.io --wait=true --timeout=1m
+for i in $(oc get node -l cluster.ocs.openshift.io/openshift-storage= -o jsonpath='{ .items[*].metadata.name }'); do oc debug node/${i} -- chroot /host rm -rf  /var/lib/rook; done
 
-oc delete crd backingstores.noobaa.io bucketclasses.noobaa.io cephblockpools.ceph.rook.io cephclusters.ceph.rook.io cephfilesystems.ceph.rook.io cephnfses.ceph.rook.io cephobjectstores.ceph.rook.io cephobjectstoreusers.ceph.rook.io noobaas.noobaa.io ocsinitializations.ocs.openshift.io storageclusters.ocs.openshift.io cephclients.ceph.rook.io cephobjectrealms.ceph.rook.io cephobjectzonegroups.ceph.rook.io cephobjectzones.ceph.rook.io cephrbdmirrors.ceph.rook.io --wait=true --timeout=1m
+oc delete project openshift-storage
 
+for i in localblock openshift-storage.noobaa.io ocs-storagecluster-ceph-rbd ocs-storagecluster-ceph-rgw ocs-storagecluster-cephfs ; do oc delete sc $i ; done
+
+oc delete crd backingstores.noobaa.io bucketclasses.noobaa.io cephblockpools.ceph.rook.io cephclusters.ceph.rook.io cephfilesystems.ceph.rook.io cephnfses.ceph.rook.io cephobjectstores.ceph.rook.io cephobjectstoreusers.ceph.rook.io noobaas.noobaa.io ocsinitializations.ocs.openshift.io storageclusters.ocs.openshift.io cephclients.ceph.rook.io cephobjectrealms.ceph.rook.io cephobjectzonegroups.ceph.rook.io cephobjectzones.ceph.rook.io cephrbdmirrors.ceph.rook.io --wait=true --timeout=30s
+
+oc delete project openshift-storage
 for resource in $(oc api-resources --namespaced=true -o name); do echo "Retrieving $resource" && oc get $resource ; done;
 
 export SC=localblock
 oc get pv | grep $SC | awk '{print $1}'| xargs oc delete pv
 oc delete sc $SC
+oc project default
 [[ ! -z $SC ]] && for i in $(oc get node -l cluster.ocs.openshift.io/openshift-storage= -o jsonpath='{ .items[*].metadata.name }'); do oc debug node/${i} -- chroot /host rm -rfv /mnt/local-storage/${SC}/; done
 oc delete localvolumediscovery.local.storage.openshift.io/auto-discover-devices -n openshift-local-storage
 
+oc project openshift-storage
 LV=local-block
 SC=localblock
-oc delete pv -l storage.openshift.com/local-volume-owner-name=${LV} --wait --timeout=5m
-oc delete storageclass $SC --wait --timeout=5m
+oc delete pv -l storage.openshift.com/local-volume-owner-name=${LV} --wait --timeout=1m
+oc delete storageclass $SC --wait --timeout=1m
 [[ ! -z $SC ]] && for i in $(oc get node -l cluster.ocs.openshift.io/openshift-storage= -o jsonpath='{ .items[*].metadata.name }'); do oc debug node/${i} -- chroot /host rm -rfv /mnt/local-storage/${SC}/; done
+
+crcssh
+for i in vdb vdc vdd ; do crcssh sudo  wipefs -af /dev/$i ; done
+for i in vdb vdc vdd  ; do crcssh sudo sgdisk --zap-all /dev/$i ; done
+for i in vdb vdc vdd  ; do crcssh sudo dd  if=/dev/zero of=/dev/$i bs=1M count=100 oflag=direct,dsync  ; done
+for i in vdb vdc vdd  ; do crcssh sudo blkdiscard /dev/$i ; done
 ```

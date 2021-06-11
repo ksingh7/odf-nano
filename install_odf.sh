@@ -1,11 +1,11 @@
 #!/bin/bash
 
-## Author : cblum@redhat.com (Thanks Chris)
-
 set +x
+
+
 echo "Setting up environment for ODF - this will take a few minutes"
 
-oc label "$(oc get no -o name)" cluster.ocs.openshift.io/openshift-storage='' >/dev/null
+oc label "$(oc get no -o name)" cluster.ocs.openshift.io/openshift-storage='' --overwrite >/dev/null
 
 oc create ns openshift-storage >/dev/null
 oc project openshift-storage >/dev/null
@@ -158,21 +158,13 @@ metadata:
   namespace: openshift-storage
 spec:
   manageNodes: false
-  resources:
-    mds:
-      limits:
-        cpu: "1"
-        memory: "1Gi"
-      requests:
-        cpu: "1"
-        memory: "1Gi"
   monPVCTemplate:
     spec:
       accessModes:
       - ReadWriteOnce
       resources:
         requests:
-          storage: "10Gi"
+          storage: 1
       storageClassName: localfile
       volumeMode: Filesystem
   storageDeviceSets:
@@ -183,20 +175,14 @@ spec:
         - ReadWriteOnce
         resources:
           requests:
-            storage: "10Gi"
+            storage: 1
         storageClassName: localblock
         volumeMode: Block
     name: ocs-deviceset
     placement: {}
     portable: false
-    replica: 2
-    resources:
-      limits:
-        cpu: "1"
-        memory: "1Gi"
-      requests:
-        cpu: "1"
-        memory: "1Gi"
+    replica: 1
+    resources: {}
 EOF
 
 echo "ODF is installing now, please be patient"
@@ -205,4 +191,5 @@ oc patch OCSInitialization ocsinit -n openshift-storage --type json --patch '[{ 
 sleep 3
 oc wait --for=condition=Ready --timeout=10m pod -l app=rook-ceph-tools
 export POD=$(oc get po -l app=rook-ceph-tools -o name)
+
 echo "ODF is installed now"
