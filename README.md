@@ -114,6 +114,9 @@ ODF is installed now
 ```
 oc get sc
 ```
+- You now have File/Block/Object Storage Classes from ODF
+
+![ODF Storage Classes](odf-sc.png)
 
 ## Access CRC from a remote client
 By default CRC cluster is reachable from localhost. Inorder to access a CRC cluster remotely, we need to add a proxy layer.
