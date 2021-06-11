@@ -230,6 +230,7 @@ ping -c 1 console-openshift-console.apps-crc.testing
 ```
 
 ## Uninstall ODF-Nano
+- WIP
 ```
 oc annotate storagecluster ocs-storagecluster uninstall.ocs.openshift.io/cleanup-policy="delete" --overwrite 
 oc annotate storagecluster ocs-storagecluster uninstall.ocs.openshift.io/mode="forced" --overwrite
