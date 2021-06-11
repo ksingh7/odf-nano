@@ -304,7 +304,7 @@ rook-ceph-mds-ocs-storagecluster-cephfilesystem-b-59f5576crxr9v   0/1     Pendin
 $
 ```
 - We just have 1 node and 3 OSDs, with 2x Replica, can we HACK crush map to store 2x replica 
-- Update default crush map such that all 2 replicas are stored on OSDs (that belongs to 1 node)
+  - Update default crush map such that all 2 replicas are stored on OSDs (that belongs to 1 node)
 ```
 sh-4.4# ceph -s
   cluster:
