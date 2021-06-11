@@ -1,7 +1,7 @@
 # Introduction
 - Do you like OpenShift ? ..... Sweet  :+1:
 - Do you use [CRC (CodeReady Containers)](https://developers.redhat.com/products/codeready-containers/overview) for local dev/test ?  ..... Great :clap:
-- Would you like persistent File/Block/Object Storage in your CRC Dev/Test environment ..... Awesome :raised_hands:
+- Would you like persistent File/Block/Object Storage in your CRC Dev/Test environment ? ..... Awesome :raised_hands:
 # Introducing ODF-Nano
 `ODF-Nano` lets you deploy [OpenShift Data Foundation](https://www.redhat.com/en/technologies/cloud-computing/openshift-data-foundation) on your Laptop. 
 For dev/test experimentation developers ofter need persistent storage with OpenShift (CRC). CRC did not had a persistent storage solution,  `ODF-Nano` solves persistent storage problem for CRC. 
