@@ -5,7 +5,7 @@
 
 # Introducing ODF-Nano
 `ODF-Nano` lets you deploy `OpenShift Data Foundation` on your Laptop. 
-For dev/test experimentation developers ofter need persistent storage with OpenShift (CRC). CRC did not had a persistent storage solution,  `ODF-Nano` solves this problem for CRC. 
+For dev/test experimentation developers ofter need persistent storage with OpenShift (CRC). CRC did not had a persistent storage solution,  `ODF-Nano` solves persistent storage problem for CRC. 
 
 # Setup
 ## Step -1 ::  Deploy CRC
@@ -29,17 +29,9 @@ crcssh uptime
 ```
 - Access https://console-openshift-console.apps-crc.testing from client machine
 
-### Deep clean previous instance of crc
-```
-crc delete -f
-rm -rf .crc/*. -v !(".crc/cache/*.crcbundle | pull-secret.txt") #ToTest
-sudo virsh list --all
-sudo virsh destroy crc
-sudo virsh undefine crc
-```
 ## Step -2 :: Deploy ODF-Nano on CRC
 ### Prerequisites
-- Create a few raw devices that ODF-Nano will use
+- Create a few raw devices that `ODF-Nano` will use
 ```
 ## Don't worry this is thin provisioned
 sudo -S qemu-img create -f raw ~/.crc/vdb 50G
@@ -124,6 +116,8 @@ oc get sc
 ```
 
 ## Access CRC from a remote client
+By default CRC cluster is reachable from localhost. Inorder to access a CRC cluster remotely, we need to add a proxy layer.
+This setup is useful, when you want to deploy CRC on a remote machine (Home server or a Cloud bare metal), there has to be a way for  you to acces CRC cluster remotely. This procedure help you access your CRC remotely.
 
 -  Execute on the Host running CRC VM
 ```
@@ -290,4 +284,11 @@ ln -s /mnt/hdd_space1/.crc ~/.crc
 ```
 ssh -i ~/.crc/machines/crc/id_ecdsa core@"$(crc ip)"
 ```
-
+- Deep clean previous instance of crc
+```
+crc delete -f
+rm -rf .crc/*. -v !(".crc/cache/*.crcbundle | pull-secret.txt") #ToTest
+sudo virsh list --all
+sudo virsh destroy crc
+sudo virsh undefine crc
+```
