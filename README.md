@@ -16,7 +16,7 @@ cd ~/.crc
 #Get your pull secret from https://cloud.redhat.com/openshift/create/local and save it as `~/.crc/pull-secret.txt`
 cp pull-secret.txt ~/.crc
 crc config set consent-telemetry no
-crc config set enable-cluster-monitoring true
+crc config set enable-cluster-monitoring true # Enable only if you have enough memory, needs ~4G extra
 crc config set cpus 15 #Change as per your HW config
 crc config set memory 60000 #Change as per your HW config
 crc config view
@@ -91,7 +91,7 @@ crcssh lsblk
 ```
 git clone https://github.com/ksingh7/odf-nano.git
 cd odf-nano
-sh install_odf.sh
+sh deploy_odf.sh
 ```
 - Sample output
 ```
@@ -114,10 +114,10 @@ ODF is installed now
 ```
 oc get sc
 ```
-- You now have File/Block/Object Storage Classes from ODF
+- You now have File/Block/Object Persistent Storage Classes from ODF. Deploy and Test your app locally, like you do in production (OCP & ODF)
 
 ![ODF Storage Classes](odf-sc.png)
-
+# Miscelleanous 
 ## Access CRC from a remote client
 By default CRC cluster is reachable from localhost. Inorder to access a CRC cluster remotely, we need to add a proxy layer.
 This setup is useful, when you want to deploy CRC on a remote machine (Home server or a Cloud bare metal), there has to be a way for  you to acces CRC cluster remotely. This procedure help you access your CRC remotely.
@@ -275,7 +275,7 @@ for i in vdb vdc vdd  ; do crcssh sudo sgdisk --zap-all /dev/$i ; done
 for i in vdb vdc vdd  ; do crcssh sudo dd  if=/dev/zero of=/dev/$i bs=1M count=100 oflag=direct,dsync  ; done
 for i in vdb vdc vdd  ; do crcssh sudo blkdiscard /dev/$i ; done
 ```
-##  Troubleshooting
+#  Troubleshooting
 
 - If running out of space, create a symlink for .crc
 ```
@@ -295,7 +295,7 @@ sudo virsh list --all
 sudo virsh destroy crc
 sudo virsh undefine crc
 ```
-## To-Do
+# To-Do
 - Update `install_odf.sh` such that it does not deploy second MDS. We just have 1 node and per design OCS operator is unable to schedule second MDS pod
 ```
 $ oc get po | grep -i mds-ocs
