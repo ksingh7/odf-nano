@@ -389,7 +389,7 @@ EOF
 #
 secondmdsreplicaset=$(oc get replicaset -o name | grep mds | grep 'cephfilesystem-b')
 oc scale ${secondmdsreplicaset} -n openshift-storage --replicas=0 >/dev/null
-secondmds=$(oc get deployment -o name -n openshift-storage | grep mds | grep 'cephfilesystem-b'
+secondmds=$(oc get deployment -o name -n openshift-storage | grep mds | grep 'cephfilesystem-b')
 oc scale ${secondmds} -n openshift-storage --replicas=0 >/dev/null
 #
 # Now make sure no HEALTH_WARNING shows up
