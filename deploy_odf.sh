@@ -257,13 +257,6 @@ spec:
     placement: {}
     portable: false
     replica: 1
-    resources:
-      limits:
-        cpu: 500m
-        memory: 1Gi
-      requests:
-        cpu: 250m
-        memory: 256Mi
 EOF
 
 echo "ODF is installing now, please be patient"
@@ -282,8 +275,8 @@ oc rsh -n openshift-storage ${rookoperator} ceph -c /var/lib/rook/openshift-stor
 #
 # End workaround
 #
-echo "Configure your block environment
-#
+echo "Configure your block environment"
+
 cat <<EOF | oc create -f - >/dev/null
 apiVersion: ceph.rook.io/v1
 kind: CephBlockPool
@@ -328,18 +321,20 @@ reclaimPolicy: Delete
 volumeBindingMode: Immediate
 EOF
 
-cat <<EOF | oc create -f - >/dev/null
-apiVersion: snapshot.storage.k8s.io/v1beta1
-deletionPolicy: Delete
-driver: openshift-storage.rbd.csi.ceph.com
-kind: VolumeSnapshotClass
-metadata:
-  name: ocs-storagecluster-rbdplugin-snapclass
-parameters:
-  clusterID: openshift-storage
-  csi.storage.k8s.io/snapshotter-secret-name: rook-csi-rbd-provisioner
-  csi.storage.k8s.io/snapshotter-secret-namespace: openshift-storage
-EOF
+#error: unable to recognize "STDIN": no matches for kind "VolumeSnapshotClass" in version "snapshot.storage.k8s.io/v1beta1"
+
+#cat <<EOF | oc create -f - >/dev/null
+#apiVersion: snapshot.storage.k8s.io/v1beta1
+#deletionPolicy: Delete
+#driver: openshift-storage.rbd.csi.ceph.com
+#kind: VolumeSnapshotClass
+#metadata:
+#  name: ocs-storagecluster-rbdplugin-snapclass
+#parameters:
+#  clusterID: openshift-storage
+#  csi.storage.k8s.io/snapshotter-secret-name: rook-csi-rbd-provisioner
+#  csi.storage.k8s.io/snapshotter-secret-namespace: openshift-storage
+#EOF
 
 echo "Configuring your file environment"
 
