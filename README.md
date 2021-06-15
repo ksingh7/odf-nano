@@ -25,6 +25,7 @@ alias crcssh='ssh -i ~/.crc/machines/crc/id_ecdsa core@"$(crc ip)"'
 alias crcstart='crc start  --log-level info -p ~/.crc/pull-secret.txt'
 crcstart
 crcssh uptime
+crc console --credentials  > crc-creds.txt
 ```
 - Access https://console-openshift-console.apps-crc.testing from client machine
 
@@ -33,9 +34,8 @@ crcssh uptime
 - Create a few raw devices that `ODF-Nano` will use
 ```
 ## Don't worry this is thin provisioned
-sudo -S qemu-img create -f raw ~/.crc/vdb 50G
-sudo -S qemu-img create -f raw ~/.crc/vdc 50G
-sudo -S qemu-img create -f raw ~/.crc/vdd 50G
+sudo -S qemu-img create -f raw ~/.crc/vdb 100G
+sudo -S qemu-img create -f raw ~/.crc/vdc 100G
 ```
 
 - Attach these devices to CRC VM
@@ -46,6 +46,7 @@ virsh dumpxml crc > crc.xml
 vim crc.xml
 ```
 - Add the following section to `crc.xml`
+- Make sure to set the correct disk path
 ```
     <disk type='file' device='disk'>
       <driver name='qemu' type='raw' cache='none'/>
@@ -62,14 +63,6 @@ vim crc.xml
       <target dev='vdc' bus='virtio'/>
       <alias name='virtio-disk2'/>
       <address type='pci' domain='0x0000' bus='0x06' slot='0x00' function='0x0'/>
-    </disk>
-    <disk type='file' device='disk'>
-      <driver name='qemu' type='raw' cache='none'/>
-      <source file='/mnt/hdd_space1/mohit/.crc/vdd' index='3'/>
-      <backingStore/>
-      <target dev='vdd' bus='virtio'/>
-      <alias name='virtio-disk3'/>
-      <address type='pci' domain='0x0000' bus='0x07' slot='0x00' function='0x0'/>
     </disk>
 ```
 - Apply XML file and start CRC

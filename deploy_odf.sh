@@ -89,7 +89,7 @@ metadata:
   name: local-pv-vdb
 spec:
   capacity:
-    storage: 50Gi
+    storage: 100Gi
   volumeMode: Block
   accessModes:
   - ReadWriteOnce
@@ -112,7 +112,7 @@ metadata:
   name: local-pv-vdc
 spec:
   capacity:
-    storage: 50Gi
+    storage: 100Gi
   volumeMode: Block
   accessModes:
   - ReadWriteOnce
@@ -120,29 +120,6 @@ spec:
   storageClassName: localblock
   local:
     path: /dev/vdc
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: node.openshift.io/os_id
-          operator: In
-          values:
-          - rhcos
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: local-pv-vdd
-spec:
-  capacity:
-    storage: 50Gi
-  volumeMode: Block
-  accessModes:
-  - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: localblock
-  local:
-    path: /dev/vdd
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -244,7 +221,7 @@ spec:
   manageNodes: false
   monDataDirHostPath: /var/lib/rook
   storageDeviceSets:
-  - count: 3
+  - count: 2
     dataPVCTemplate:
       spec:
         accessModes:
@@ -266,7 +243,7 @@ oc patch OCSInitialization ocsinit -n openshift-storage --type json --patch '[{ 
 sleep 3
 oc wait --for=condition=Ready --timeout=10m pod -l app=rook-ceph-tools
 export POD=$(oc get po -l app=rook-ceph-tools -o name)
-
+sleep 60
 echo "Now configuring your ODF cluster"
 #
 # Woraround for config override and just in case
