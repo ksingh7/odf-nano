@@ -416,18 +416,18 @@ reclaimPolicy: Delete
 volumeBindingMode: Immediate
 EOF
 
-cat <<EOF | oc create -f - >/dev/null
-apiVersion: snapshot.storage.k8s.io/v1beta1
-deletionPolicy: Delete
-driver: openshift-storage.cephfs.csi.ceph.com
-kind: VolumeSnapshotClass
-metadata:
-  name: ocs-storagecluster-cephfsplugin-snapclass
-parameters:
-  clusterID: openshift-storage
-  csi.storage.k8s.io/snapshotter-secret-name: rook-csi-cephfs-provisioner
-  csi.storage.k8s.io/snapshotter-secret-namespace: openshift-storage
-EOF
+#cat <<EOF | oc create -f - >/dev/null
+#apiVersion: snapshot.storage.k8s.io/v1beta1
+#deletionPolicy: Delete
+#driver: openshift-storage.cephfs.csi.ceph.com
+#kind: VolumeSnapshotClass
+#metadata:
+#  name: ocs-storagecluster-cephfsplugin-snapclass
+#parameters:
+#  clusterID: openshift-storage
+#  csi.storage.k8s.io/snapshotter-secret-name: rook-csi-cephfs-provisioner
+#  csi.storage.k8s.io/snapshotter-secret-namespace: openshift-storage
+#EOF
 
 #
 # This portion left commented out for now until we can discuss if we want this
@@ -436,6 +436,84 @@ EOF
 # Other thing is if you want noobaa. Then we might have to do some more tricks to start noobaa but only have 1 RGW running as a backing
 # Let's discuss this tomorrow Karan.
 #
-#echo "Now configuring you S3 environment"
-#
+echo "Configuring you S3 environment"
+
+cat <<EOF | oc create -f - >/dev/null
+apiVersion: ceph.rook.io/v1
+kind: CephObjectStore
+metadata:
+  name: ocs-storagecluster-cephobjectstore
+  namespace: openshift-storage
+spec:
+  dataPool:
+    crushRoot: ""
+    deviceClass: ""
+    erasureCoded:
+      algorithm: ""
+      codingChunks: 0
+      dataChunks: 0
+    failureDomain: osd
+    replicated:
+      requireSafeReplicaSize: false
+      size: 2
+  gateway:
+    allNodes: false
+    instances: 1
+    placement: {}
+    port: 80
+    resources: {}
+    securePort: 0
+    sslCertificateRef: ""
+  metadataPool:
+    crushRoot: ""
+    deviceClass: ""
+    erasureCoded:
+      algorithm: ""
+      codingChunks: 0
+      dataChunks: 0
+    failureDomain: osd
+    replicated:
+      size: 2
+      requireSafeReplicaSize: false
+EOF
+
+cat <<EOF | oc create -f - >/dev/null
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: ocs-storagecluster-ceph-rgw
+provisioner: openshift-storage.ceph.rook.io/bucket
+parameters:
+  objectStoreName: ocs-storagecluster-cephobjectstore
+  objectStoreNamespace: openshift-storage
+  region: us-east-1
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+EOF
+
+cat <<EOF | oc create -f - >/dev/null
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: rgw
+  namespace: openshift-storage
+  labels:
+    app: rook-ceph-rgw
+    ceph_daemon_id: ocs-storagecluster-cephobjectstore
+    ceph_daemon_type: rgw
+    rgw: ocs-storagecluster-cephobjectstore
+    rook_cluster: openshift-storage
+    rook_object_store: ocs-storagecluster-cephobjectstore
+spec:
+  to:
+    kind: Service
+    name: rook-ceph-rgw-ocs-storagecluster-cephobjectstore
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Allow
+EOF
+
 echo "ODF is installed now"
