@@ -1,6 +1,7 @@
 ## Authors
 ## cblum@redhat.com
 ## karasing@redhat.com
+## jelopez@redhat.com
 
 #!/bin/bash
 set +x
