@@ -21,11 +21,11 @@ crc config set cpus 15 #Change as per your HW config
 crc config set memory 60000 #Change as per your HW config
 crc config view
 crc setup
-alias start='start  --log-level debug -p ~/.crc/pull-secret.txt'
 alias crcssh='ssh -i ~/.crc/machines/crc/id_ecdsa core@"$(crc ip)"'
 alias crcstart='crc start  --log-level info -p ~/.crc/pull-secret.txt'
 crcstart
 crcssh uptime
+crc console --credentials  > crc-creds.txt
 ```
 - Access https://console-openshift-console.apps-crc.testing from client machine
 
@@ -34,9 +34,8 @@ crcssh uptime
 - Create a few raw devices that `ODF-Nano` will use
 ```
 ## Don't worry this is thin provisioned
-sudo -S qemu-img create -f raw ~/.crc/vdb 50G
-sudo -S qemu-img create -f raw ~/.crc/vdc 50G
-sudo -S qemu-img create -f raw ~/.crc/vdd 50G
+sudo -S qemu-img create -f raw ~/.crc/vdb 100G
+sudo -S qemu-img create -f raw ~/.crc/vdc 100G
 ```
 
 - Attach these devices to CRC VM
@@ -47,6 +46,7 @@ virsh dumpxml crc > crc.xml
 vim crc.xml
 ```
 - Add the following section to `crc.xml`
+- Make sure to set the correct disk path
 ```
     <disk type='file' device='disk'>
       <driver name='qemu' type='raw' cache='none'/>
@@ -64,19 +64,11 @@ vim crc.xml
       <alias name='virtio-disk2'/>
       <address type='pci' domain='0x0000' bus='0x06' slot='0x00' function='0x0'/>
     </disk>
-    <disk type='file' device='disk'>
-      <driver name='qemu' type='raw' cache='none'/>
-      <source file='/mnt/hdd_space1/mohit/.crc/vdd' index='3'/>
-      <backingStore/>
-      <target dev='vdd' bus='virtio'/>
-      <alias name='virtio-disk3'/>
-      <address type='pci' domain='0x0000' bus='0x07' slot='0x00' function='0x0'/>
-    </disk>
 ```
 - Apply XML file and start CRC
 ```
 virsh define crc.xml
-crc start
+crcstart
 ```
 - List devices to verify
 ```
@@ -241,7 +233,7 @@ for i in  storageclusters.ocs.openshift.io/ocs-storagecluster cephblockpools.cep
 
 for i in  storageclusters.ocs.openshift.io/ocs-storagecluster cephblockpools.ceph.rook.io/ocs-storagecluster-cephblockpool cephfilesystems.ceph.rook.io/ocs-storagecluster-cephfilesystem cephobjectstores.ceph.rook.io/ocs-storagecluster-cephobjectstore cephclusters.ceph.rook.io/ocs-storagecluster-cephcluster ; do oc patch $i --type json --patch='[ { "op": "remove", "path": "/metadata/finalizers" } ]'  ; done
 
-oc delete subscriptino ocs-subscription
+oc delete subscription ocs-subscription
 oc delete csv ocs-operator.v9.9.0
 
 
@@ -253,8 +245,6 @@ for i in localblock openshift-storage.noobaa.io ocs-storagecluster-ceph-rbd ocs-
 
 oc delete crd backingstores.noobaa.io bucketclasses.noobaa.io cephblockpools.ceph.rook.io cephclusters.ceph.rook.io cephfilesystems.ceph.rook.io cephnfses.ceph.rook.io cephobjectstores.ceph.rook.io cephobjectstoreusers.ceph.rook.io noobaas.noobaa.io ocsinitializations.ocs.openshift.io storageclusters.ocs.openshift.io cephclients.ceph.rook.io cephobjectrealms.ceph.rook.io cephobjectzonegroups.ceph.rook.io cephobjectzones.ceph.rook.io cephrbdmirrors.ceph.rook.io --wait=true --timeout=30s
 
-oc delete project openshift-storage
-for resource in $(oc api-resources --namespaced=true -o name); do echo "Retrieving $resource" && oc get $resource ; done;
 
 export SC=localblock
 oc get pv | grep $SC | awk '{print $1}'| xargs oc delete pv
@@ -263,6 +253,16 @@ oc project default
 [[ ! -z $SC ]] && for i in $(oc get node -l cluster.ocs.openshift.io/openshift-storage= -o jsonpath='{ .items[*].metadata.name }'); do oc debug node/${i} -- chroot /host rm -rfv /mnt/local-storage/${SC}/; done
 oc delete localvolumediscovery.local.storage.openshift.io/auto-discover-devices -n openshift-local-storage
 
+crcssh
+for i in vdb vdc vdd ; do crcssh sudo  wipefs -af /dev/$i ; done
+for i in vdb vdc vdd  ; do crcssh sudo sgdisk --zap-all /dev/$i ; done
+for i in vdb vdc vdd  ; do crcssh sudo dd  if=/dev/zero of=/dev/$i bs=1M count=100 oflag=direct,dsync  ; done
+for i in vdb vdc vdd  ; do crcssh sudo blkdiscard /dev/$i ; done
+
+## Not required (to double check)
+oc delete project openshift-storage
+for resource in $(oc api-resources --namespaced=true -o name); do echo "Retrieving $resource" && oc get $resource ; done;
+
 oc project openshift-storage
 LV=local-block
 SC=localblock
@@ -270,11 +270,6 @@ oc delete pv -l storage.openshift.com/local-volume-owner-name=${LV} --wait --tim
 oc delete storageclass $SC --wait --timeout=1m
 [[ ! -z $SC ]] && for i in $(oc get node -l cluster.ocs.openshift.io/openshift-storage= -o jsonpath='{ .items[*].metadata.name }'); do oc debug node/${i} -- chroot /host rm -rfv /mnt/local-storage/${SC}/; done
 
-crcssh
-for i in vdb vdc vdd ; do crcssh sudo  wipefs -af /dev/$i ; done
-for i in vdb vdc vdd  ; do crcssh sudo sgdisk --zap-all /dev/$i ; done
-for i in vdb vdc vdd  ; do crcssh sudo dd  if=/dev/zero of=/dev/$i bs=1M count=100 oflag=direct,dsync  ; done
-for i in vdb vdc vdd  ; do crcssh sudo blkdiscard /dev/$i ; done
 ```
 #  Troubleshooting
 

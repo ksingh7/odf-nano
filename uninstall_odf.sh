@@ -32,8 +32,8 @@ for i in $(oc get node -l cluster.ocs.openshift.io/openshift-storage= -o jsonpat
 oc delete localvolumediscovery.local.storage.openshift.io/auto-discover-devices -n openshift-local-storage
 
 alias crcssh='ssh -i ~/.crc/machines/crc/id_ecdsa core@"$(crc ip)"'
-for i in vdb vdc vdd ; do crcssh sudo  wipefs -af /dev/$i ; done
-for i in vdb vdc vdd  ; do crcssh sudo sgdisk --zap-all /dev/$i ; done
-for i in vdb vdc vdd  ; do crcssh sudo dd  if=/dev/zero of=/dev/$i bs=1M count=100 oflag=direct,dsync  ; done
-for i in vdb vdc vdd  ; do crcssh sudo blkdiscard /dev/$i ; done
+for i in vdb vdc ; do crcssh sudo  wipefs -af /dev/$i ; done
+for i in vdb vdc ; do crcssh sudo sgdisk --zap-all /dev/$i ; done
+for i in vdb vdc ; do crcssh sudo dd  if=/dev/zero of=/dev/$i bs=1M count=100 oflag=direct,dsync  ; done
+for i in vdb vdc ; do crcssh sudo blkdiscard /dev/$i ; done
 
