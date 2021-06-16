@@ -504,10 +504,4 @@ spec:
     insecureEdgeTerminationPolicy: Allow
 EOF
 
-#
-# Fix the pool incorrect settings here
-#
-oc rsh -n openshift-storage ${rookoperator} ceph -c /var/lib/rook/openshift-storage/openshift-storage.config  osd pool set device_health_metrics size 2 >/dev/null
-oc rsh -n openshift-storage ${rookoperator} ceph -c /var/lib/rook/openshift-storage/openshift-storage.config  osd pool set device_health_metrics min_size 1 >/dev/null
-
 echo "ODF is installed now"
