@@ -321,20 +321,21 @@ reclaimPolicy: Delete
 volumeBindingMode: Immediate
 EOF
 
-#error: unable to recognize "STDIN": no matches for kind "VolumeSnapshotClass" in version "snapshot.storage.k8s.io/v1beta1"
-
-#cat <<EOF | oc create -f - >/dev/null
-#apiVersion: snapshot.storage.k8s.io/v1beta1
-#deletionPolicy: Delete
-#driver: openshift-storage.rbd.csi.ceph.com
-#kind: VolumeSnapshotClass
-#metadata:
-#  name: ocs-storagecluster-rbdplugin-snapclass
-#parameters:
-#  clusterID: openshift-storage
-#  csi.storage.k8s.io/snapshotter-secret-name: rook-csi-rbd-provisioner
-#  csi.storage.k8s.io/snapshotter-secret-namespace: openshift-storage
-#EOF
+#
+# Try with this fixed for OCP 4.7
+#
+cat <<EOF | oc create -f - >/dev/null
+apiVersion: snapshot.storage.k8s.io/v1
+deletionPolicy: Delete
+driver: openshift-storage.rbd.csi.ceph.com
+kind: VolumeSnapshotClass
+metadata:
+  name: ocs-storagecluster-rbdplugin-snapclass
+parameters:
+  clusterID: openshift-storage
+  csi.storage.k8s.io/snapshotter-secret-name: rook-csi-rbd-provisioner
+  csi.storage.k8s.io/snapshotter-secret-namespace: openshift-storage
+EOF
 
 echo "Configuring your file environment"
 
@@ -416,18 +417,27 @@ reclaimPolicy: Delete
 volumeBindingMode: Immediate
 EOF
 
-#cat <<EOF | oc create -f - >/dev/null
-#apiVersion: snapshot.storage.k8s.io/v1beta1
-#deletionPolicy: Delete
-#driver: openshift-storage.cephfs.csi.ceph.com
-#kind: VolumeSnapshotClass
-#metadata:
-#  name: ocs-storagecluster-cephfsplugin-snapclass
-#parameters:
-#  clusterID: openshift-storage
-#  csi.storage.k8s.io/snapshotter-secret-name: rook-csi-cephfs-provisioner
-#  csi.storage.k8s.io/snapshotter-secret-namespace: openshift-storage
-#EOF
+#
+# Try with this fixed for OCP 4.7
+#
+cat <<EOF | oc create -f - >/dev/null
+apiVersion: snapshot.storage.k8s.io/v1
+deletionPolicy: Delete
+driver: openshift-storage.cephfs.csi.ceph.com
+kind: VolumeSnapshotClass
+metadata:
+  name: ocs-storagecluster-cephfsplugin-snapclass
+parameters:
+  clusterID: openshift-storage
+  csi.storage.k8s.io/snapshotter-secret-name: rook-csi-cephfs-provisioner
+  csi.storage.k8s.io/snapshotter-secret-namespace: openshift-storage
+EOF
+
+#
+# Fix the device metrics pool incorrect settings here
+#
+oc rsh -n openshift-storage ${rookoperator} ceph -c /var/lib/rook/openshift-storage/openshift-storage.config  osd pool set device_health_metrics size 2 >/dev/null
+oc rsh -n openshift-storage ${rookoperator} ceph -c /var/lib/rook/openshift-storage/openshift-storage.config  osd pool set device_health_metrics min_size 1 >/dev/null
 
 #
 # This portion left commented out for now until we can discuss if we want this
@@ -515,5 +525,11 @@ spec:
     termination: edge
     insecureEdgeTerminationPolicy: Allow
 EOF
+
+#
+# Fix the pool incorrect settings here
+#
+oc rsh -n openshift-storage ${rookoperator} ceph -c /var/lib/rook/openshift-storage/openshift-storage.config  osd pool set device_health_metrics size 2 >/dev/null
+oc rsh -n openshift-storage ${rookoperator} ceph -c /var/lib/rook/openshift-storage/openshift-storage.config  osd pool set device_health_metrics min_size 1 >/dev/null
 
 echo "ODF is installed now"
