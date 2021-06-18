@@ -286,6 +286,7 @@ ssh -i ~/.crc/machines/crc/id_ecdsa core@"$(crc ip)"
 - Deep clean previous instance of crc
 ```
 crc delete -f
+crc cleanup
 rm -rf ~/.crc/vd* ~/.crc/crc* ~/.crc/bin ~/.crc/machines
 sudo virsh list --all
 sudo virsh destroy crc
