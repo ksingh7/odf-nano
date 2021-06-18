@@ -291,47 +291,33 @@ sudo virsh list --all
 sudo virsh destroy crc
 sudo virsh undefine crc
 ```
+- Increase root disk spaced of CRC VM
+
+By defautl CRC  vm uses 30G of root disk, you definately need to increase that 
+```
+crcssh lsblk
+# Identify partition name of /sysroot
+vda    252:0    0   31G  0 disk
+|-vda1 252:1    0    1M  0 part
+|-vda2 252:2    0  127M  0 part
+|-vda3 252:3    0  384M  0 part /boot
+`-vda4 252:4    0 30.5G  0 part /sysroot
+vdb    252:16   0  100G  0 disk
+vdc    252:32   0  100G  0 disk
+
+crc stop
+
+CRC_MACHINE_IMAGE=${HOME}/.crc/machines/crc/crc.qcow2
+
+# This resize is thin-provisioned
+sudo qemu-img resize ${CRC_MACHINE_IMAGE} +20G
+sudo cp ${CRC_MACHINE_IMAGE} ${CRC_MACHINE_IMAGE}.ORIGINAL
+
+#increase the /dev/sda4 (known as vda4 in the VM) disk partition size by an additional 20GB
+sudo virt-resize --expand /dev/sda4 ${CRC_MACHINE_IMAGE}.ORIGINAL ${CRC_MACHINE_IMAGE}
+sudo rm ${CRC_MACHINE_IMAGE}.ORIGINAL
+crcstart
+```
 # To-Do
-- Update `install_odf.sh` such that it does not deploy second MDS. We just have 1 node and per design OCS operator is unable to schedule second MDS pod
-```
-$ oc get po | grep -i mds-ocs
-rook-ceph-mds-ocs-storagecluster-cephfilesystem-a-c5894fddn7frh   1/1     Running     0          72m
-rook-ceph-mds-ocs-storagecluster-cephfilesystem-b-59f5576crxr9v   0/1     Pending     0          66m
-$
-```
-- We just have 1 node and 3 OSDs, with 2x Replica, can we HACK crush map to store 2x replica 
-  - Update default crush map such that all 2 replicas are stored on OSDs (that belongs to 1 node)
-```
-sh-4.4# ceph -s
-  cluster:
-    id:     3cd29eb4-f8de-49fa-a39e-05aa166e1783
-    health: HEALTH_WARN
-            11 pool(s) have no replicas configured
+- Refer  issue#3
 
-  services:
-    mon: 1 daemons, quorum a (age 74m)
-    mgr: a(active, since 74m)
-    mds: ocs-storagecluster-cephfilesystem:1 {0=ocs-storagecluster-cephfilesystem-a=up:active}
-    osd: 3 osds: 3 up (since 73m), 3 in (since 73m)
-    rgw: 1 daemon active (ocs.storagecluster.cephobjectstore.a)
-
-  data:
-    pools:   11 pools, 401 pgs
-    objects: 451 objects, 112 MiB
-    usage:   198 MiB used, 150 GiB / 150 GiB avail
-    pgs:     401 active+clean
-
-  io:
-    client:   13 KiB/s wr, 0 op/s rd, 1 op/s wr
-
-sh-4.4#
-sh-4.4# ceph osd tree
-ID  CLASS  WEIGHT   TYPE NAME                        STATUS  REWEIGHT  PRI-AFF
--1         0.14639  root default
--4         0.14639      rack rack0
--3         0.14639          host crc-m89r2-master-0
- 0    hdd  0.04880              osd.0                    up   1.00000  1.00000
- 1    hdd  0.04880              osd.1                    up   1.00000  1.00000
- 2    hdd  0.04880              osd.2                    up   1.00000  1.00000
-sh-4.4#
-```
