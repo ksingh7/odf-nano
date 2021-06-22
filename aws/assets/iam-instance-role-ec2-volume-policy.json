@@ -1,0 +1,18 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "StsDecodeEC2ListInstances",
+            "Effect": "Allow",
+            "Action": [
+                 "sts:DecodeAuthorizationMessage",
+                 "ec2:DescribeInstances",
+                 "ec2:DescribeVolumes",
+                 "ec2:AttachVolume",
+                 "ec2:CreateVolume",
+                 "ec2:CreateTags"
+             ],
+            "Resource": "*"
+        }
+    ]
+}
