@@ -7,36 +7,39 @@ chown fedora:fedora /var/log/crc_setup.log
 
 touch  /var/log/crc_status
 chown fedora:fedora /var/log/crc_status 
-
 echo "progressing" >> /var/log/crc_status 2>&1 
 
 echo "Installing required packages ... [Done]"  >> /var/log/crc_setup.log 2>&1
 dnf update -y > /dev/null 2>&1
-dnf install -y NetworkManager wget git haproxy vim unzip > /dev/null 2>&1
+dnf install -y NetworkManager wget git haproxy vim unzip bc libvirt libvirt-daemon-kvm qemu-kvm libguestfs-tools guestfs-tools  /usr/sbin/semanage > /dev/null 2>&1
 
 echo "Setting up AWS Cli... [Done]"  >> /var/log/crc_setup.log 2>&1
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/awscliv2.zip" > /dev/null 2>&1
 unzip /awscliv2.zip > /dev/null 2>&1
 ./aws/install > /dev/null 2>&1
 
-EBS_VOLUME_ID=$(aws --region=ap-south-1 ec2 describe-volumes --filters "Name=tag:environment,Values=crc" --query "Volumes[*].{ID:VolumeId}" --output text)
+#EBS_VOLUME_ID=$(aws --region=REGION ec2 describe-volumes --filters "Name=tag:environment,Values=crc" --query "Volumes[*].{ID:VolumeId}" --output text)
+
+EBS_VOLUME_ID=$(aws  --region=REGION ec2 describe-volumes --filters "Name=tag:environment,Values=crc" "Name=availability-zone,Values=AZ_NAME" --query "Volumes[*].{ID:VolumeId}" --output text)
+
+#EBS_VOLUME_AZ=$(aws --region=REGION ec2 describe-volumes --filters "Name=tag:environment,Values=crc" --query "Volumes[*].{ID:AvailabilityZone}" --output text)
 
 if [ -n "$EBS_VOLUME_ID" ]; then
     echo "Using existing EBS Volume ..."  >> /var/log/crc_setup.log 2>&1
 else
     echo "Creating EBS Volume for CRC ..."  >> /var/log/crc_setup.log 2>&1
-    aws --region=ap-south-1 ec2 create-volume --volume-type gp2 --size 200 --availability-zone ap-south-1c --tag-specifications 'ResourceType=volume,Tags=[{Key="environment",Value="crc"}]'   >> /var/log/crc_setup.log 2>&1
-
+    aws --region=REGION ec2 create-volume --volume-type gp2 --size 200 --availability-zone AZ_NAME --tag-specifications 'ResourceType=volume,Tags=[{Key="environment",Value="crc"}]'   >> /var/log/crc_setup.log 2>&1
+fi
 sleep 10
 
-EC2_INSTANCE_ID=$(aws --region=ap-south-1 ec2 describe-instances --filters "Name=instance-type,Values=c5n.metal" "Name=instance-state-code,Values=16" --query 'Reservations[*].Instances[*].{Instance:InstanceId}' --output text)
+EC2_INSTANCE_ID=$(aws --region=REGION ec2 describe-instances --filters "Name=instance-type,Values=INSTANCE_TYPE" "Name=instance-state-code,Values=16" --query 'Reservations[*].Instances[*].{Instance:InstanceId}' --output text)
 echo "Instance ID :" $EC2_INSTANCE_ID  >> /var/log/crc_setup.log 2>&1
 
-EBS_VOLUME_ID=$(aws --region=ap-south-1 ec2 describe-volumes --filters "Name=tag:environment,Values=crc" --query "Volumes[*].{ID:VolumeId}" --output text)
+EBS_VOLUME_ID=$(aws  --region=REGION ec2 describe-volumes --filters "Name=tag:environment,Values=crc" "Name=availability-zone,Values=AZ_NAME" --query "Volumes[*].{ID:VolumeId}" --output text)
 echo "EBS Volume ID :"$EBS_VOLUME_ID  >> /var/log/crc_setup.log 2>&1
 
 echo "Attaching EBS Volume to CRC Spot Instance ..." >> /var/log/crc_setup.log 2>&1
-aws --region=ap-south-1 ec2 attach-volume --volume-id $EBS_VOLUME_ID --instance-id $EC2_INSTANCE_ID --device /dev/xvdb >> /var/log/crc_setup.log 2>&1
+aws --region=REGION ec2 attach-volume --volume-id $EBS_VOLUME_ID --instance-id $EC2_INSTANCE_ID --device /dev/xvdb >> /var/log/crc_setup.log 2>&1
 
 sleep 10
 
@@ -55,10 +58,10 @@ else
         umount /mnt
         mount -a  >> /var/log/crc_setup.log 2>&1
         sudo -u fedora echo "Downloading latest version of CRC ..." >> /var/log/crc_setup.log 2>&1
-        sudo -u fedora wget https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/crc-linux-amd64.tar.xz -q --show-progres -O /home/fedora/crc-linux-amd64.tar.xz  >> /var/log/crc_setup.log 2>&1
+        sudo -u fedora wget https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/crc-linux-amd64.tar.xz -q --show-progres -O /home/fedora/crc-linux-amd64.tar.xz
 
         sudo -u fedora echo "Downloading latest version of OC client ..." >> /var/log/crc_setup.log 2>&1
-        sudo -u fedora wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz -q --show-progress -O /home/fedora/openshift-client-linux.tar.gz  >> /var/log/crc_setup.log 2>&1
+        sudo -u fedora wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz -q --show-progress -O /home/fedora/openshift-client-linux.tar.gz
 
         sudo -u fedora echo "Extracting CRC binary ..." >> /var/log/crc_setup.log 2>&1
         sudo -u fedora tar xvf /home/fedora/crc-linux-amd64.tar.xz -C /home/fedora  >> /var/log/crc_setup.log 2>&1 
@@ -71,14 +74,24 @@ else
 
         sudo -u fedora rm -rf /home/fedora/crc-linux* > /dev/null 2>&1
         sudo -u fedora rm /home/fedora/openshift-client*  > /dev/null 2>&1
+
         sudo -u fedora echo "Cleaning up leftovers ... [Done]" >> /var/log/crc_setup.log 2>&1
 fi
 
-sudo -u fedora echo "Setting up CRC configuration ..." >> /var/log/crc_setup.log 2>&1
-sudo -u fedora crc config set cpus 4 >> /var/log/crc_setup.log 2>&1
-sudo -u fedora crc config set memory 9500 >> /var/log/crc_setup.log 2>&1
+echo "Calculating CPU cores for  CRC usage ..."  >> /var/log/crc_setup.log 2>&1
+CPU_TEMP=$(echo "$(lscpu | grep -v "NUMA" | grep -i "CPU(s):" | awk '{print $2}')*0.90" | bc)
+CPU=$(printf '%.0f\n' $CPU_TEMP)
+
+echo "Calculating Memory for CRC usage ..."  >> /var/log/crc_setup.log 2>&1
+MEMORY_TEMP=$(echo "$(free -m | grep -i mem | awk '{print $2}') * 0.90" | bc)
+MEMORY=$(printf '%.0f\n' $MEMORY_TEMP)
+
+sudo -u fedora echo "Setting up CRC ..." >> /var/log/crc_setup.log 2>&1
+sudo -u fedora crc config set cpus $CPU >> /var/log/crc_setup.log 2>&1
+sudo -u fedora crc config set memory $MEMORY >> /var/log/crc_setup.log 2>&1
 sudo -u fedora crc config set enable-cluster-monitoring true >> /var/log/crc_setup.log 2>&1
 sudo -u fedora crc config set consent-telemetry yes >> /var/log/crc_setup.log 2>&1
+sudo -u fedora crc config view >> /var/log/crc_setup.log 2>&1
 
 sudo -u fedora echo "===== CRC Setup Completed ====" >> /var/log/crc_setup.log 2>&1
 
