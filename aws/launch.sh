@@ -1,5 +1,5 @@
 #!/bin/bash
-#bash launch.sh 1.0 ap-south-1 ap-south-1a
+#bash launch.sh ap-south-1 ap-south-1a true 
 # aws ec2 describe-spot-price-history --start-time=$(date +%s) --instance-types c5n.metal --product-descriptions="Linux/UNIX"
 
 #SPOTPRICE=$1
@@ -7,12 +7,13 @@ REGION=$1
 AZ_NAME=$2
 DEBUG=$3
 
-KEY_NAME=ksingh-mumbai
-INSTANCE_TYPE=c5n.metal # c5n.metal , t3.medium
-AWS_ACCOUNT_NUMBER=903134789966
+KEY_PAIR_NAME="crc-key-pair"
+#PUB_KEY_PATH =" "
+AWS_ACCOUNT_NUMBER=$(aws sts get-caller-identity --query "Account" --output text)
+INSTANCE_TYPE=c5n.metal  #cheapest x86 baremetal instance from AWS
 AMI_ID=ami-01d3bd808e1fd393c
 
-if [ -n "$DEBUG" ]; then
+if [ "$DEBUG" == "true"  ]; then
     set -x
 fi
 
@@ -38,6 +39,18 @@ else
     AZ_NAME="$REGION"c
     echo "No AZ provided, launching instance in AZ : $AZ_NAME ..."
 
+fi
+
+if [ -z $PUB_KEY_PATH ]; then
+    echo "Please provide SSH Public Key absolute path to create AWS Key Pair in the selected Region (ex: <HOME_DIR>/.ssh/id_rsa.pub) : "
+    read PUB_KEY_PATH
+    if [ -a  $PUB_KEY_PATH ]; then
+        aws --region $REGION ec2 import-key-pair --key-name $KEY_PAIR_NAME --tag-specifications 'ResourceType=key-pair,Tags=[{Key="environment",Value="crc"}'--public-key-material fileb://$PUB_KEY_PATH  > /dev/null 2>&1
+        echo "New key-pair named "$KEY_PAIR_NAME" created in region "$REGION"..."
+    else
+        echo "Invalid SSH Public Key path or Key file does not exists ... exiting"
+        exit 1
+    fi
 fi
 
 if [[ "$IS_IAM_ROLE_EXISTS" == "crc-ec2-volume-role" ]]; then
@@ -72,9 +85,8 @@ USER_DATA_BASE_64=$(base64 assets/user-data.sh)
 
 ## Todo - Improve this
 echo "Generating Launch Specification file ..."
-#SPOTPRICESG_ID=sg-0deb585fffca6c599
 sed 's/SG_ID/'$SG_ID'/' assets/spot-instance-specification-template.json > assets/spot-instance-specification.json
-sed -i ' ' 's/KEY_NAME/'$KEY_NAME'/' assets/spot-instance-specification.json
+sed -i ' ' 's/KEY_PAIR_NAME/'$KEY_PAIR_NAME'/' assets/spot-instance-specification.json
 sed -i ' ' 's/INSTANCE_TYPE/'$INSTANCE_TYPE'/' assets/spot-instance-specification.json
 sed -i ' ' 's/AWS_ACCOUNT_NUMBER/'$AWS_ACCOUNT_NUMBER'/' assets/spot-instance-specification.json
 sed -i ' ' 's/USER_DATA_BASE_64/'$USER_DATA_BASE_64'/' assets/spot-instance-specification.json
@@ -83,12 +95,18 @@ sed -i ' ' 's/AMI_ID/'$AMI_ID'/' assets/spot-instance-specification.json
 
 echo "Launching SPOT Instance, Please Wait ..."
 sleep 10
-aws ec2 request-spot-instances --availability-zone-group $REGION  --instance-count 1 --type "one-time" --launch-specification file://assets/spot-instance-specification.json  --tag-specifications 'ResourceType=spot-instances-request,Tags=[{Key="environment",Value="crc"}]' 
+aws ec2 request-spot-instances --availability-zone-group $REGION  --instance-count 1 --type "one-time" --launch-specification file://assets/spot-instance-specification.json  --tag-specifications 'ResourceType=spot-instances-request,Tags=[{Key="environment",Value="crc"}]'  > /dev/null 2>&1
 rm assets/spot-instance-specification.json
 rm assets/user-data.sh
-sleep 30
+
+sleep 60
 
 SPOT_REQUEST_OUTPUT=$(aws ec2 describe-spot-instance-requests  --filters "Name=state,Values=open,active" "Name=tag:environment,Values=crc" "Name=availability-zone-group,Values=$REGION") 
-echo $SPOT_REQUEST_ID
-
+#echo $SPOT_REQUEST_ID
 echo "Please allow 5 minutes for instance configuration"
+
+sleep 180
+
+EIP=$(aws ec2 describe-instances --filters "Name=instance-type,Values=$INSTANCE_TYPE" "Name=availability-zone,Values=$AZ_NAME" --query "Reservations[*].Instances[*].PublicIpAddress" --output=text)
+
+ssh  fedora@$EIP tail -50f /var/log/crc_setup.log

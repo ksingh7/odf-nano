@@ -51,13 +51,13 @@ An error occurred (DependencyViolation) when calling the DeleteSecurityGroup ope
 ```
 - Configure Local machine to use CRC on Spot
 ```
-sudo rm /usr/local/etc/dnsmasq.d/crc.conf
-EC2_PUB_IP=3.6.39.231
-echo "address=/apps-crc.testing/$EC2_PUB_IP" >> /usr/local/etc/dnsmasq.d/crc.conf
-echo "address=/api.crc.testing/$EC2_PUB_IP" >> /usr/local/etc/dnsmasq.d/crc.conf
-sudo brew services restart dnsmasq
-dig apps-crc.testing @127.0.0.1
-dig console-openshift-console.apps-crc.testing @127.0.0.1
+sudo rm /usr/local/etc/dnsmasq.d/crc.conf ;
+EC2_PUB_IP=65.0.169.151 ; 
+echo "address=/apps-crc.testing/$EC2_PUB_IP" >> /usr/local/etc/dnsmasq.d/crc.conf ;
+echo "address=/api.crc.testing/$EC2_PUB_IP" >> /usr/local/etc/dnsmasq.d/crc.conf ;
+sudo brew services restart dnsmasq ;
+dig apps-crc.testing @127.0.0.1 ;
+dig console-openshift-console.apps-crc.testing @127.0.0.1 ;
 
 ```
 

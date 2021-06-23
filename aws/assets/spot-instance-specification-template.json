@@ -1,6 +1,6 @@
 {
   "ImageId": "AMI_ID",
-  "KeyName": "KEY_NAME",
+  "KeyName": "KEY_PAIR_NAME",
   "SecurityGroupIds": [ "SG_ID" ],
   "UserData": "USER_DATA_BASE_64",
   "InstanceType": "INSTANCE_TYPE",

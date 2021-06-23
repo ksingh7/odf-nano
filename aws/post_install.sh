@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# bash post_install.sh ~/pull-secret.txt true
 PULL_SECRET_PATH=$1
 EXPAND_CRC_DISK_SIZE=$2
 
@@ -7,6 +7,8 @@ CRC_XML_FILE=~/crc.xml
 if [ -f "$CRC_XML_FILE" ]; then
     echo "Previously configured CRC environment detected ... "
     echo "Reconfiguring CRC ..."
+    for service in  libvirtd.service libvirtd.socket ; do sudo systemctl start $service ; done
+    for service in  libvirtd.service libvirtd.socket ; do sudo systemctl enable $service ; done
     sudo virsh define ~/crc.xml
 fi
 
@@ -25,32 +27,29 @@ else
     exit 1
 fi
 
-# Add check for this sction 
+if [ ! -f "$CRC_XML_FILE" ]; then
+    echo "Stopping CRC temporarily ... "
+    crc stop
+    
+    if [[ "$EXPAND_CRC_DISK_SIZE" == "true" ]]; then
+        echo "Expanding CRC ROOT Disk Size by +40G ..."
+        # Increase DISK size
+        CRC_MACHINE_IMAGE=${HOME}/.crc/machines/crc/crc.qcow2
+        # This resize is thin-provisioned
+        sudo qemu-img resize ${CRC_MACHINE_IMAGE} +40G
+        sudo cp ${CRC_MACHINE_IMAGE} ${CRC_MACHINE_IMAGE}.ORIGINAL  
+        #increase the /dev/sda4 (known as vda4 in the VM) disk partition size by an additional 20GB
+        sudo virt-resize --expand /dev/sda4 ${CRC_MACHINE_IMAGE}.ORIGINAL ${CRC_MACHINE_IMAGE}
+        sudo rm ${CRC_MACHINE_IMAGE}.ORIGINAL
+    fi
 
-echo "Stopping CRC temporarily ... "
-crc stop
-
-if [[ "$EXPAND_CRC_DISK_SIZE" == "true" ]]; then
-    echo "Expanding CRC ROOT Disk Size by +40G ..."
-    # Increase DISK size
-    CRC_MACHINE_IMAGE=${HOME}/.crc/machines/crc/crc.qcow2
-    # This resize is thin-provisioned
-    sudo qemu-img resize ${CRC_MACHINE_IMAGE} +40G
-    sudo cp ${CRC_MACHINE_IMAGE} ${CRC_MACHINE_IMAGE}.ORIGINAL  
-    #increase the /dev/sda4 (known as vda4 in the VM) disk partition size by an additional 20GB
-    sudo virt-resize --expand /dev/sda4 ${CRC_MACHINE_IMAGE}.ORIGINAL ${CRC_MACHINE_IMAGE}
-    sudo rm ${CRC_MACHINE_IMAGE}.ORIGINAL
+    echo "Listing Libvirt VMs ... "
+    sudo virsh list --all
+    echo "Dumping VM config in XML  ... "
+    sudo virsh dumpxml crc > ~/crc.xml
+    echo "Starting CRC ... "
+    crc start -p ~/pull-secret.txt
 fi
-
-echo "Listing Libvirt VMs ... "
-sudo virsh list --all
-echo "Dumping VM config in XML  ... "
-sudo virsh dumpxml crc > ~/crc.xml
-
-
-
-echo "Starting CRC ... "
-crc start -p ~/pull-secret.txt
 
 sleep 10
 
