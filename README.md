@@ -41,8 +41,8 @@ sudo -S qemu-img create -f raw ~/.crc/vdc 100G
 - Attach these devices to CRC VM
 ```
 crc stop
-virsh list
-virsh dumpxml crc > crc.xml
+sudo virsh list --all
+sudo virsh dumpxml crc > ~/crc.xml
 vim crc.xml
 ```
 - Add the following section to `crc.xml`
@@ -50,7 +50,7 @@ vim crc.xml
 ```
     <disk type='file' device='disk'>
       <driver name='qemu' type='raw' cache='none'/>
-      <source file='/mnt/hdd_space1/mohit/.crc/vdb' index='1'/>
+      <source file='~/.crc/vdb' index='1'/>
       <backingStore/>
       <target dev='vdb' bus='virtio'/>
       <alias name='virtio-disk1'/>
@@ -58,7 +58,7 @@ vim crc.xml
     </disk>
     <disk type='file' device='disk'>
       <driver name='qemu' type='raw' cache='none'/>
-      <source file='/mnt/hdd_space1/mohit/.crc/vdc' index='2'/>
+      <source file='~/.crc/vdc' index='2'/>
       <backingStore/>
       <target dev='vdc' bus='virtio'/>
       <alias name='virtio-disk2'/>
@@ -67,7 +67,8 @@ vim crc.xml
 ```
 - Apply XML file and start CRC
 ```
-virsh define crc.xml
+sed -i "s|~|$HOME|g" crc.xml
+sudo virsh define crc.xml
 crcstart
 ```
 - List devices to verify
