@@ -317,7 +317,7 @@ EOF
 
 echo "Configuring your file environment"
 
-cat <<EOF | oc create -f - >/dev/null
+cat <<EOF | oc create -f - >/dev/null 2>&1
 apiVersion: ceph.rook.io/v1
 kind: CephFilesystem
 metadata:
@@ -367,9 +367,9 @@ EOF
 # Scale down the extra MDSs (replicaset and deployment)
 #
 secondmdsreplicaset=$(oc get replicaset -o name | grep mds | grep 'cephfilesystem-b')
-oc scale ${secondmdsreplicaset} -n openshift-storage --replicas=0 >/dev/null
+oc scale ${secondmdsreplicaset} -n openshift-storage --replicas=0 >/dev/null 2>&1
 secondmds=$(oc get deployment -o name -n openshift-storage | grep mds | grep 'cephfilesystem-b')
-oc scale ${secondmds} -n openshift-storage --replicas=0 >/dev/null
+oc scale ${secondmds} -n openshift-storage --replicas=0 >/dev/null 2>&1
 #
 # Now make sure no HEALTH_WARNING shows up
 #
