@@ -302,18 +302,18 @@ EOF
 #
 # Try with this fixed for OCP 4.7
 #
-cat <<EOF | oc create -f - >/dev/null
-apiVersion: snapshot.storage.k8s.io/v1
-deletionPolicy: Delete
-driver: openshift-storage.rbd.csi.ceph.com
-kind: VolumeSnapshotClass
-metadata:
-  name: ocs-storagecluster-rbdplugin-snapclass
-parameters:
-  clusterID: openshift-storage
-  csi.storage.k8s.io/snapshotter-secret-name: rook-csi-rbd-provisioner
-  csi.storage.k8s.io/snapshotter-secret-namespace: openshift-storage
-EOF
+#cat <<EOF | oc create -f - >/dev/null
+#apiVersion: snapshot.storage.k8s.io/v1
+#deletionPolicy: Delete
+#driver: openshift-storage.rbd.csi.ceph.com
+#kind: VolumeSnapshotClass
+#metadata:
+#  name: ocs-storagecluster-rbdplugin-snapclass
+#parameters:
+#  clusterID: openshift-storage
+#  csi.storage.k8s.io/snapshotter-secret-name: rook-csi-rbd-provisioner
+#  csi.storage.k8s.io/snapshotter-secret-namespace: openshift-storage
+#EOF
 
 echo "Configuring your file environment"
 
@@ -398,18 +398,18 @@ EOF
 #
 # Try with this fixed for OCP 4.7
 #
-cat <<EOF | oc create -f - >/dev/null
-apiVersion: snapshot.storage.k8s.io/v1
-deletionPolicy: Delete
-driver: openshift-storage.cephfs.csi.ceph.com
-kind: VolumeSnapshotClass
-metadata:
-  name: ocs-storagecluster-cephfsplugin-snapclass
-parameters:
-  clusterID: openshift-storage
-  csi.storage.k8s.io/snapshotter-secret-name: rook-csi-cephfs-provisioner
-  csi.storage.k8s.io/snapshotter-secret-namespace: openshift-storage
-EOF
+#cat <<EOF | oc create -f - >/dev/null
+#apiVersion: snapshot.storage.k8s.io/v1
+#deletionPolicy: Delete
+#driver: openshift-storage.cephfs.csi.ceph.com
+#kind: VolumeSnapshotClass
+#metadata:
+#  name: ocs-storagecluster-cephfsplugin-snapclass
+#parameters:
+#  clusterID: openshift-storage
+#  csi.storage.k8s.io/snapshotter-secret-name: rook-csi-cephfs-provisioner
+#  csi.storage.k8s.io/snapshotter-secret-namespace: openshift-storage
+#EOF
 
 #
 # Fix the device metrics pool incorrect settings here
