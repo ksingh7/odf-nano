@@ -1,8 +1,13 @@
 ![](images/odf-nano-logo-white.png)
 # Whats the need ?
-- Do you like OpenShift ? ..... Sweet  :+1:
-- Do you use [CRC (CodeReady Containers)](https://developers.redhat.com/products/codeready-containers/overview) for local dev/test ?  ..... Great :clap:
-- Would you like persistent File/Block/Object Storage in your CRC Dev/Test environment ? ..... Awesome :raised_hands:
+
+- Developers love OpenShift :heart:
+- Developers need local OpenShift environment (Solution : [CRC (CodeReady Containers)](https://developers.redhat.com/products/codeready-containers/overview) ) :computer:
+- Developers build Applications, that need Block/File/Object storage :hammer:
+- ODF provides Block/File/Object storage to OpenShift :ok_hand:
+- ODF Nano deploys ODF on CRC  :raised_hands:  :clap:
+
+
 # Introducing ODF-Nano
 `ODF-Nano` lets you deploy [OpenShift Data Foundation](https://www.redhat.com/en/technologies/cloud-computing/openshift-data-foundation) on your Laptop (CRC). 
 - For dev/test experimentation developers ofter need persistent storage with CRC. 
@@ -20,11 +25,11 @@ crc config set consent-telemetry no
 crc config set enable-cluster-monitoring true # Enable only if you have enough memory, needs ~4G extra
 crc config set cpus 15 #Change as per your HW config
 crc config set memory 60000 #Change as per your HW config
+ crc config set pull-secret-file ~/.crc/pull-secret
 crc config view
 crc setup
 alias crcssh='ssh -i ~/.crc/machines/crc/id_ecdsa core@"$(crc ip)"'
-alias crcstart='crc start  --log-level info -p ~/.crc/pull-secret.txt'
-crcstart
+crc start
 crcssh uptime
 crc console --credentials  > crc-creds.txt
 ```
@@ -70,7 +75,7 @@ vim crc.xml
 ```
 sed -i "s|~|$HOME|g" crc.xml
 sudo virsh define crc.xml
-crcstart
+crc start
 ```
 - List devices to verify
 ```
@@ -118,67 +123,41 @@ This setup is useful, when you want to deploy CRC on a remote machine (Home serv
 
 -  Execute on the Host running CRC VM
 ```
-export SERVER_IP=0.0.0.0
-export CRC_IP=$(crc ip)
-
-sudo apt-get install haproxy
-sudo cp haproxy.cfg haproxy.cfg.backup
-vim haprox.cfg
+SERVER_IP=0.0.0.0
+CRC_IP=$(crc ip)
+sudo cp /etc/haproxy/haproxy.cfg{,.bak}
+sudo semanage port -a -t http_port_t -p tcp 6443
+sudo tee /etc/haproxy/haproxy.cfg &>/dev/null <<EOF
 ```
 
 ```
+global
+    log /dev/log local0
+
 defaults
-    mode http
+    balance roundrobin
     log global
-    option httplog
-    option  http-server-close
-    option  dontlognull
-    option  redispatch
-    option  contstats
-    retries 3
-    backlog 10000
-    timeout client          25s
-    timeout connect          5s
-    timeout server          25s
-    timeout tunnel        3600s
-    timeout http-keep-alive  1s
-    timeout http-request    15s
-    timeout queue           30s
-    timeout tarpit          60s
-    default-server inter 3s rise 2 fall 3
-    option forwardfor
-
-frontend apps
-    bind SERVER_IP:80
-    bind SERVER_IP:443
-    option tcplog
+    maxconn 100
     mode tcp
-    default_backend apps
+    timeout connect 5s
+    timeout client 500s
+    timeout server 500s
 
-backend apps
-    mode tcp
-    balance roundrobin
-    option tcp-check
-    server webserver1 CRC_IP check port 80
+listen apps
+    bind 0.0.0.0:80
+    server crcvm $CRC_IP:80 check
 
-frontend api
-    bind SERVER_IP:6443
-    option tcplog
-    mode tcp
-    default_backend api
+listen apps_ssl
+    bind 0.0.0.0:443
+    server crcvm $CRC_IP:443 check
 
-backend api
-    mode tcp
-    balance roundrobin
-    option tcp-check
-    server webserver1 CRC_IP:6443 check port 6443
+listen api
+    bind 0.0.0.0:6443
+    server crcvm $CRC_IP:6443 check
 ```
 
 ```
-sudo sed -i "s/SERVER_IP/$SERVER_IP/g" haproxy.cfg
-sudo sed -i "s/CRC_IP/$CRC_IP/g" haproxy.cfg
-
-sudo systemctl start haproxy
+sudo systemctl restart haproxy
 sudo systemctl status haproxy
 
 sudo netstat -plunt  | grep -i haproxy
@@ -224,54 +203,9 @@ ping -c 1 console-openshift-console.apps-crc.testing
 ```
 
 ## Uninstall ODF-Nano
-- WIP
+
 ```
-oc annotate storagecluster ocs-storagecluster uninstall.ocs.openshift.io/cleanup-policy="delete" --overwrite 
-oc annotate storagecluster ocs-storagecluster uninstall.ocs.openshift.io/mode="forced" --overwrite
-
-oc delete -n openshift-storage storagecluster --all  --wait=true --timeout=10s
-
-for i in  storageclusters.ocs.openshift.io/ocs-storagecluster cephblockpools.ceph.rook.io/ocs-storagecluster-cephblockpool cephfilesystems.ceph.rook.io/ocs-storagecluster-cephfilesystem cephobjectstores.ceph.rook.io/ocs-storagecluster-cephobjectstore cephclusters.ceph.rook.io/ocs-storagecluster-cephcluster ; do oc delete $i --wait=true --timeout=10s ; done
-
-for i in  storageclusters.ocs.openshift.io/ocs-storagecluster cephblockpools.ceph.rook.io/ocs-storagecluster-cephblockpool cephfilesystems.ceph.rook.io/ocs-storagecluster-cephfilesystem cephobjectstores.ceph.rook.io/ocs-storagecluster-cephobjectstore cephclusters.ceph.rook.io/ocs-storagecluster-cephcluster ; do oc patch $i --type json --patch='[ { "op": "remove", "path": "/metadata/finalizers" } ]'  ; done
-
-oc delete subscription ocs-subscription
-oc delete csv ocs-operator.v9.9.0
-
-
-for i in $(oc get node -l cluster.ocs.openshift.io/openshift-storage= -o jsonpath='{ .items[*].metadata.name }'); do oc debug node/${i} -- chroot /host rm -rf  /var/lib/rook; done
-
-oc delete project openshift-storage
-
-for i in localblock openshift-storage.noobaa.io ocs-storagecluster-ceph-rbd ocs-storagecluster-ceph-rgw ocs-storagecluster-cephfs ; do oc delete sc $i ; done
-
-oc delete crd backingstores.noobaa.io bucketclasses.noobaa.io cephblockpools.ceph.rook.io cephclusters.ceph.rook.io cephfilesystems.ceph.rook.io cephnfses.ceph.rook.io cephobjectstores.ceph.rook.io cephobjectstoreusers.ceph.rook.io noobaas.noobaa.io ocsinitializations.ocs.openshift.io storageclusters.ocs.openshift.io cephclients.ceph.rook.io cephobjectrealms.ceph.rook.io cephobjectzonegroups.ceph.rook.io cephobjectzones.ceph.rook.io cephrbdmirrors.ceph.rook.io --wait=true --timeout=30s
-
-
-export SC=localblock
-oc get pv | grep $SC | awk '{print $1}'| xargs oc delete pv
-oc delete sc $SC
-oc project default
-[[ ! -z $SC ]] && for i in $(oc get node -l cluster.ocs.openshift.io/openshift-storage= -o jsonpath='{ .items[*].metadata.name }'); do oc debug node/${i} -- chroot /host rm -rfv /mnt/local-storage/${SC}/; done
-oc delete localvolumediscovery.local.storage.openshift.io/auto-discover-devices -n openshift-local-storage
-
-crcssh
-for i in vdb vdc vdd ; do crcssh sudo  wipefs -af /dev/$i ; done
-for i in vdb vdc vdd  ; do crcssh sudo sgdisk --zap-all /dev/$i ; done
-for i in vdb vdc vdd  ; do crcssh sudo dd  if=/dev/zero of=/dev/$i bs=1M count=100 oflag=direct,dsync  ; done
-for i in vdb vdc vdd  ; do crcssh sudo blkdiscard /dev/$i ; done
-
-## Not required (to double check)
-oc delete project openshift-storage
-for resource in $(oc api-resources --namespaced=true -o name); do echo "Retrieving $resource" && oc get $resource ; done;
-
-oc project openshift-storage
-LV=local-block
-SC=localblock
-oc delete pv -l storage.openshift.com/local-volume-owner-name=${LV} --wait --timeout=1m
-oc delete storageclass $SC --wait --timeout=1m
-[[ ! -z $SC ]] && for i in $(oc get node -l cluster.ocs.openshift.io/openshift-storage= -o jsonpath='{ .items[*].metadata.name }'); do oc debug node/${i} -- chroot /host rm -rfv /mnt/local-storage/${SC}/; done
-
+bash uninstall_odf.sh
 ```
 #  Troubleshooting
 
