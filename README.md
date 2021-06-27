@@ -14,18 +14,30 @@
 - Currently CRC lacks clean & simple persistent storage solution,  `ODF-Nano` solves this problem for CRC. 
 - Devs can now develop/test their apps locally using `CRC+ODF-Nano`. Once the app is ready, it could be deployed in production `OCP+ODF` without any change
 # Setup
+
+## Prerequisites
+### Host OS 
+- RHEL 8, 
+- Fedora 34 (tested) [ Feel free to test with other releases ]
+- Ubuntu 20.04 (tested) [ Feel free to test with other releases ]
+
+At this time `odf-nano` does not support MacOS. If you know how to create and attach virtual disk on MacOS and attach that to CRC VM running in hyperkit, then i would appretiate your contribution to this project.
+
+### CRC / OC Binaries
+- Download CRC and OC binaries from [cloud.redhat.com]((https://cloud.redhat.com/openshift/create/local)
+- Create CRC directlry `mkdir ~/.crc`
+- Also get CRC pull secret from [cloud.redhat.com]((https://cloud.redhat.com/openshift/create/local) and save it as `~/.crc/pull-secret.txt`
 ## Step -1 ::  Deploy CRC
 
 ```
 mkdir ~/.crc
 cd ~/.crc
-#Get your pull secret from https://cloud.redhat.com/openshift/create/local and save it as `~/.crc/pull-secret.txt`
-cp pull-secret.txt ~/.crc
+# Get CRC pull secret from [cloud.redhat.com]((https://cloud.redhat.com/openshift/create/local) and save it as `~/.crc/pull-secret.txt`
 crc config set consent-telemetry no
 crc config set enable-cluster-monitoring true # Enable only if you have enough memory, needs ~4G extra
 crc config set cpus 15 #Change as per your HW config
 crc config set memory 60000 #Change as per your HW config
- crc config set pull-secret-file ~/.crc/pull-secret
+crc config set pull-secret-file ~/.crc/pull-secret
 crc config view
 crc setup
 alias crcssh='ssh -i ~/.crc/machines/crc/id_ecdsa core@"$(crc ip)"'
@@ -117,6 +129,30 @@ oc get sc
 
 ![ODF Storage Classes](images/odf-sc.png)
 # Miscelleanous 
+
+## ODF-Nano Resource Footprint & Components
+- Resource Footprint
+
+| CPU | Memory |
+| --------------- | --------------- |
+| 3 vCPU | 2.5G |
+
+- ODF Components
+
+| Component | Count |
+| ---------------  | --------------- |
+| MON | 1 |
+| MGR | 1 |
+| OSD | 2 |
+| MDS | 2 |
+| RGW | 1 |
+| Ceph-Tools | 1 |
+| ocs-metrics-exporter  | 1 |
+| ocs-operator | 1 |
+| noobaa-operator  | 1 |
+
+** Reducing MDS count to 1 is WIP **
+
 ## Access CRC from a remote client
 By default CRC cluster is reachable from localhost. Inorder to access a CRC cluster remotely, we need to add a proxy layer.
 This setup is useful, when you want to deploy CRC on a remote machine (Home server or a Cloud bare metal), there has to be a way for  you to acces CRC cluster remotely. This procedure help you access your CRC remotely.

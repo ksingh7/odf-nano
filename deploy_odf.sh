@@ -416,7 +416,8 @@ EOF
 #
 oc rsh -n openshift-storage ${rookoperator} ceph -c /var/lib/rook/openshift-storage/openshift-storage.config  osd pool set device_health_metrics size 2 >/dev/null
 oc rsh -n openshift-storage ${rookoperator} ceph -c /var/lib/rook/openshift-storage/openshift-storage.config  osd pool set device_health_metrics min_size 1 >/dev/null
-
+oc rsh -n openshift-storage ${rookoperator} ceph -c /var/lib/rook/openshift-storage/openshift-storage.config  osd pool set device_health_metrics pg_num 8 >/dev/null
+oc rsh -n openshift-storage ${rookoperator} ceph -c /var/lib/rook/openshift-storage/openshift-storage.config  osd pool set device_health_metrics pgp_num 8 >/dev/null
 #
 # This portion left commented out for now until we can discuss if we want this
 # Worst case scenario what we have to do is like in https://red-hat-storage.github.io/ocs-training/training/ocs4/ocs4-enable-rgw.html
