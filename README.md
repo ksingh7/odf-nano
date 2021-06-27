@@ -1,4 +1,4 @@
-![](images/odf-nano-logo.png)
+![](images/odf-nano-logo-white.png)
 # Whats the need ?
 - Do you like OpenShift ? ..... Sweet  :+1:
 - Do you use [CRC (CodeReady Containers)](https://developers.redhat.com/products/codeready-containers/overview) for local dev/test ?  ..... Great :clap:
