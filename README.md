@@ -1,3 +1,4 @@
+![](images/odf-nano-logo.png)
 # Whats the need ?
 - Do you like OpenShift ? ..... Sweet  :+1:
 - Do you use [CRC (CodeReady Containers)](https://developers.redhat.com/products/codeready-containers/overview) for local dev/test ?  ..... Great :clap:
@@ -109,7 +110,7 @@ oc get sc
 ```
 - You now have File/Block/Object Persistent Storage Classes from ODF. Deploy and Test your app locally, like you do in production (OCP & ODF)
 
-![ODF Storage Classes](odf-sc.png)
+![ODF Storage Classes](images/odf-sc.png)
 # Miscelleanous 
 ## Access CRC from a remote client
 By default CRC cluster is reachable from localhost. Inorder to access a CRC cluster remotely, we need to add a proxy layer.
