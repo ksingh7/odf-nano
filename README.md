@@ -9,6 +9,8 @@
 
 
 # Introducing ODF-Nano
+tldr; Watch introduction & Demo Video [here](https://www.youtube.com/watch?v=mae0tiLkQag)
+
 `ODF-Nano` lets you deploy [OpenShift Data Foundation](https://www.redhat.com/en/technologies/cloud-computing/openshift-data-foundation) on your Laptop (CRC). 
 - For dev/test experimentation developers ofter need persistent storage with CRC. 
 - Currently CRC lacks clean & simple persistent storage solution,  `ODF-Nano` solves this problem for CRC. 
@@ -28,6 +30,7 @@ At this time `odf-nano` does not support MacOS. If you know how to create and at
 - Create CRC directlry `mkdir ~/.crc`
 - Also get CRC pull secret from [cloud.redhat.com]((https://cloud.redhat.com/openshift/create/local) and save it as `~/.crc/pull-secret.txt`
 ## Step -1 ::  Deploy CRC
+### Watch Demo Video [here](https://www.youtube.com/watch?v=mae0tiLkQag)
 
 ```
 mkdir ~/.crc
