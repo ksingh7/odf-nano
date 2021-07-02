@@ -40,7 +40,7 @@ crc config set consent-telemetry no
 crc config set enable-cluster-monitoring true # Enable only if you have enough memory, needs ~4G extra
 crc config set cpus 15 #Change as per your HW config
 crc config set memory 60000 #Change as per your HW config
-crc config set pull-secret-file ~/.crc/pull-secret
+crc config set pull-secret-file ~/.crc/pull-secret.txt
 crc config view
 crc setup
 alias crcssh='ssh -i ~/.crc/machines/crc/id_ecdsa core@"$(crc ip)"'
