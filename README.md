@@ -64,7 +64,7 @@ sudo -S qemu-img create -f raw ~/.crc/vdc 100G
 crc stop
 sudo virsh list --all
 sudo virsh dumpxml crc > ~/crc.xml
-vim crc.xml
+vim ~/crc.xml
 ```
 - Add the following section to `crc.xml`
 - Make sure to set the correct disk path
@@ -88,8 +88,8 @@ vim crc.xml
 ```
 - Apply XML file and start CRC
 ```
-sed -i "s|~|$HOME|g" crc.xml
-sudo virsh define crc.xml
+sed -i "s|~|$HOME|g" ~/crc.xml
+sudo virsh define ~/crc.xml
 crc start
 ```
 - List devices to verify
@@ -266,6 +266,9 @@ rm -rf ~/.crc/vd* ~/.crc/crc* ~/.crc/bin ~/.crc/machines
 sudo virsh list --all
 sudo virsh destroy crc
 sudo virsh undefine crc
+virsh vol-list --pool crc
+#virsh pool-destroy crc  # generally you can skip this
+# virsh vol-list --pool crc # generally you can skip this
 ```
 - Increase root disk spaced of CRC VM
 
