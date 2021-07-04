@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "Installing necessary packages ..."
 sudo apt-get update -y 2>&1 > /dev/null
-sudo apt-get install -y qemu-kvm libvirt-daemon libvirt-daemon-system network-manager wget git 2>&1 > /dev/null
+sudo apt-get install -y qemu-kvm libvirt-daemon libvirt-daemon-system network-manager libguestfs-tools wget git 2>&1 > /dev/null
 
 echo "Downloading latest version of CRC ..."
 echo "---------------------------------"
