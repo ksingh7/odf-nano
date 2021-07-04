@@ -1,4 +1,4 @@
-![](images/odf-nano-logo-white.png)
+![](assets/odf-nano-logo-white.png)
 # Whats the need ?
 
 - Developers love OpenShift :heart:
@@ -32,6 +32,7 @@ At this time `odf-nano` does not support MacOS. If you know how to create and at
 ## Step -1 ::  Deploy CRC
 ### Watch Demo Video [here](https://www.youtube.com/watch?v=mae0tiLkQag)
 
+Note : If you have already deployed CRC using [OpenSpot](https://github.com/ksingh7/openspot) project, you can skip step-1 and move directly to [step-2](https://github.com/ksingh7/odf-nano#step--2--deploy-odf-nano-on-crc)
 ```
 mkdir ~/.crc
 cd ~/.crc
@@ -52,6 +53,7 @@ crc console --credentials  > crc-creds.txt
 
 ## Step -2 :: Deploy ODF-Nano on CRC
 ### Prerequisites
+- SSH into the host machine running CRC VM
 - Create a few raw devices that `ODF-Nano` will use
 ```
 ## Don't worry this is thin provisioned
@@ -130,7 +132,7 @@ oc get sc
 ```
 - You now have File/Block/Object Persistent Storage Classes from ODF. Deploy and Test your app locally, like you do in production (OCP & ODF)
 
-![ODF Storage Classes](images/odf-sc.png)
+![ODF Storage Classes](assets/odf-sc.png)
 # Miscelleanous 
 
 ## ODF-Nano Resource Footprint & Components
@@ -295,7 +297,7 @@ sudo cp ${CRC_MACHINE_IMAGE} ${CRC_MACHINE_IMAGE}.ORIGINAL
 #increase the /dev/sda4 (known as vda4 in the VM) disk partition size by an additional 20GB
 sudo virt-resize --expand /dev/sda4 ${CRC_MACHINE_IMAGE}.ORIGINAL ${CRC_MACHINE_IMAGE}
 sudo rm ${CRC_MACHINE_IMAGE}.ORIGINAL
-crcstart
+crc start
 ```
 # To-Do
 - Refer  issue#3
