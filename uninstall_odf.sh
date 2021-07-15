@@ -38,6 +38,7 @@ do
     virtual_disk="${vdisk##*/}"
     virtual_drive="${virtual_disk%.*}"
 	echo "Wiping $virtual_drive"
+    echo "*********************"
     crcssh sudo  wipefs -af /dev/$virtual_drive ;
     sleep 2s
     crcssh sudo sgdisk --zap-all /dev/$virtual_drive
