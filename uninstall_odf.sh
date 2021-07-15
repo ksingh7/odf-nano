@@ -38,11 +38,11 @@ do
     virtual_disk="${vdisk##*/}"
     virtual_drive="${virtual_disk%.*}"
 	echo "Wiping $virtual_drive"
-    crcssh sudo  wipefs -af /dev/$vdisk ;
+    crcssh sudo  wipefs -af /dev/$virtual_drive ;
     sleep 2s
-    crcssh sudo sgdisk --zap-all /dev/$vdisk
+    crcssh sudo sgdisk --zap-all /dev/$virtual_drive
     sleep 2s
-    crcssh sudo dd  if=/dev/zero of=/dev/$vdisk bs=1M count=100 oflag=direct,dsync  ;
+    crcssh sudo dd  if=/dev/zero of=/dev/$virtual_drive bs=1M count=100 oflag=direct,dsync  ;
     sleep 2s
-    crcssh sudo blkdiscard /dev/$vdisk ; 
+    crcssh sudo blkdiscard /dev/$virtual_drive ; 
 done
