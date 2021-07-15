@@ -1,4 +1,6 @@
 #!/bin/bash
+shopt -s expand_aliases
+source ~/.bash_aliases
 
 oc annotate storagecluster ocs-storagecluster uninstall.ocs.openshift.io/cleanup-policy="delete" --overwrite
 oc annotate storagecluster ocs-storagecluster uninstall.ocs.openshift.io/mode="forced" --overwrite
@@ -31,9 +33,16 @@ oc project default
 for i in $(oc get node -l cluster.ocs.openshift.io/openshift-storage= -o jsonpath='{ .items[*].metadata.name }'); do oc debug node/${i} -- chroot /host rm -rfv /mnt/local-storage/${SC}/; done
 oc delete localvolumediscovery.local.storage.openshift.io/auto-discover-devices -n openshift-local-storage
 
-alias crcssh='ssh -i ~/.crc/machines/crc/id_ecdsa core@"$(crc ip)"'
-for i in vdb vdc ; do crcssh sudo  wipefs -af /dev/$i ; done
-for i in vdb vdc ; do crcssh sudo sgdisk --zap-all /dev/$i ; done
-for i in vdb vdc ; do crcssh sudo dd  if=/dev/zero of=/dev/$i bs=1M count=100 oflag=direct,dsync  ; done
-for i in vdb vdc ; do crcssh sudo blkdiscard /dev/$i ; done
-
+for vdisk in ~/.crc/vd*
+do
+    virtual_disk="${vdisk##*/}"
+    virtual_drive="${virtual_disk%.*}"
+	echo "Wiping $virtual_drive"
+    crcssh sudo  wipefs -af /dev/$vdisk ;
+    sleep 2s
+    crcssh sudo sgdisk --zap-all /dev/$vdisk
+    sleep 2s
+    crcssh sudo dd  if=/dev/zero of=/dev/$vdisk bs=1M count=100 oflag=direct,dsync  ;
+    sleep 2s
+    crcssh sudo blkdiscard /dev/$vdisk ; 
+done

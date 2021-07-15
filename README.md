@@ -28,6 +28,7 @@ At this time `odf-nano` does not support MacOS. If you know how to create and at
 ### CRC / OC Binaries
 - Download CRC and OC binaries from [cloud.redhat.com]((https://cloud.redhat.com/openshift/create/local)
 - Create CRC directlry `mkdir ~/.crc`
+- configure crcssh `./configure_crcssh.sh`
 - Also get CRC pull secret from [cloud.redhat.com]((https://cloud.redhat.com/openshift/create/local) and save it as `~/.crc/pull-secret.txt`
 ## Step -1 ::  Deploy CRC
 ### Watch Demo Video [here](https://www.youtube.com/watch?v=mae0tiLkQag)
@@ -55,6 +56,7 @@ crc console --credentials  > crc-creds.txt
 ### Prerequisites
 - SSH into the host machine running CRC VM
 - Create a few raw devices that `ODF-Nano` will use
+- You can also run `./generate_volumes.sh`
 ```
 ## Don't worry this is thin provisioned
 sudo -S qemu-img create -f raw ~/.crc/vdb 100G

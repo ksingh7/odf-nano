@@ -6,6 +6,7 @@
 #!/bin/bash
 set +x
 echo "Setting up environment for ODF - this will take a few minutes"
+VOLUME_COUNT="$(ls ~/.crc/vd* | wc -l)"
 
 oc label "$(oc get no -o name)" cluster.ocs.openshift.io/openshift-storage='' --overwrite >/dev/null
 
@@ -82,44 +83,32 @@ apiVersion: storage.k8s.io/v1
 metadata:
   name: localblock
 provisioner: kubernetes.io/no-provisioner
+EOF
+
+
+for vdisk in ~/.crc/vd*
+do
+  virtual_disk="${vdisk##*/}"
+  virtual_drive="${virtual_disk%.*}"
+
+  echo "Create local-pv-${virtual_drive} for ODF-Nano"
+  disk_size=$(ls -lath ~/.crc/${virtual_drive}  | grep -oE [0-9]{3}G)
+cat <<EOF | oc create -f - >/dev/null
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: local-pv-vdb
+  name: local-pv-${virtual_drive} 
 spec:
   capacity:
-    storage: 100Gi
+    storage: ${disk_size}i
   volumeMode: Block
   accessModes:
   - ReadWriteOnce
   persistentVolumeReclaimPolicy: Delete
   storageClassName: localblock
   local:
-    path: /dev/vdb
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: node.openshift.io/os_id
-          operator: In
-          values:
-          - rhcos
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: local-pv-vdc
-spec:
-  capacity:
-    storage: 100Gi
-  volumeMode: Block
-  accessModes:
-  - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: localblock
-  local:
-    path: /dev/vdc
+    path: /dev/${virtual_drive} 
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -129,6 +118,8 @@ spec:
           values:
           - rhcos
 EOF
+sleep 2s
+done
 
 seq 20 30 | xargs -n1 -P0 -I {} oc patch pv/pv00{} -p '{"metadata":{"annotations":{"volume.beta.kubernetes.io/storage-class": "localfile"}}}' >/dev/null
 
@@ -153,7 +144,7 @@ data:
     mon_osd_nearfull_ratio = .75
     mon_max_pg_per_osd = 600
     osd_pool_default_min_size = 1
-    osd_pool_default_size = 2
+    osd_pool_default_size = ${VOLUME_COUNT}
     [osd]
     osd_memory_target_cgroup_limit_ratio = 0.5
 kind: ConfigMap
@@ -221,7 +212,7 @@ spec:
   manageNodes: false
   monDataDirHostPath: /var/lib/rook
   storageDeviceSets:
-  - count: 2
+  - count: ${VOLUME_COUNT}
     dataPVCTemplate:
       spec:
         accessModes:
@@ -336,7 +327,7 @@ spec:
     failureDomain: osd
     replicated:
       requireSafeReplicaSize: false
-      size: 2
+      size: ${VOLUME_COUNT}
   metadataPool:
     compressionMode: ""
     crushRoot: ""
@@ -349,7 +340,7 @@ spec:
     failureDomain: osd
     replicated:
       requireSafeReplicaSize: false
-      size: 2
+      size: ${VOLUME_COUNT}
   metadataServer:
     activeCount: 1
     activeStandby: false
@@ -444,7 +435,7 @@ spec:
     failureDomain: osd
     replicated:
       requireSafeReplicaSize: false
-      size: 2
+      size: ${VOLUME_COUNT}
   gateway:
     allNodes: false
     instances: 1
@@ -462,7 +453,7 @@ spec:
       dataChunks: 0
     failureDomain: osd
     replicated:
-      size: 2
+      size: ${VOLUME_COUNT}
       requireSafeReplicaSize: false
 EOF
 
@@ -506,3 +497,4 @@ spec:
 EOF
 
 echo "ODF is installed now"
+
