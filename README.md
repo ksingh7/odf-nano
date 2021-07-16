@@ -134,6 +134,11 @@ oc get sc
 ```
 - You now have File/Block/Object Persistent Storage Classes from ODF. Deploy and Test your app locally, like you do in production (OCP & ODF)
 
+- Optional: Define default storage class
+```
+ oc patch storageclass ocs-storagecluster-ceph-rbd  -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}
+```
+
 ![ODF Storage Classes](assets/odf-sc.png)
 # Miscelleanous 
 
