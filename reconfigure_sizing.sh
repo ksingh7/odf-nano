@@ -1,4 +1,7 @@
 #!/bin/bash
+shopt -s expand_aliases
+source ~/.bash_aliases
+
 function configure_crc(){
     crc config set consent-telemetry no
     crc config set enable-cluster-monitoring true 
