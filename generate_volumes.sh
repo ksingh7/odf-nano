@@ -104,11 +104,11 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
     crc start
+    echo "Block creation validation"
+    crcssh lsblk
+
+    echo "To restore configutation run the following."
+    echo "$ sudo virsh define ~/crc-backup.xml"
+    echo "$ crc start "
 fi
 
-echo "Block creation validation"
-crcssh lsblk
-
-echo "To restore configutation run the following."
-echo "$ sudo virsh define ~/crc-backup.xml"
-echo "$ crc start "
