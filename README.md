@@ -157,7 +157,7 @@ EOF
 systemctl enable lvm-odf-losetup
 ```
 
-### Deploy ODF-Naon  on CRC
+### Deploy ODF-Nano on CRC
 
 -  Login to CRC using `kubeadmin`
 `oc login -u kubeadmin -p <PWD> https://api.crc.testing:6443`
@@ -166,8 +166,17 @@ systemctl enable lvm-odf-losetup
 ```
 git clone https://github.com/ksingh7/odf-nano.git
 cd odf-nano
+```
+- Install `odf-nano` - LINUX
+```
+sh deploy_odf.sh
+```
+- Install `odf-nano` - MacOS
+```
 sh deploy_odf_macos.sh
 ```
+
+
 - Sample output
 ```
 Setting up environment for ODF - this will take a few minutes
