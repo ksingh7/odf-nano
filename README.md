@@ -22,14 +22,13 @@ tldr; Watch introduction & Demo Video [here](https://www.youtube.com/watch?v=mae
 - RHEL 8, 
 - Fedora 34 (tested) [ Feel free to test with other releases ]
 - Ubuntu 20.04 (tested) [ Feel free to test with other releases ]
-
-At this time `odf-nano` does not support MacOS. If you know how to create and attach virtual disk on MacOS and attach that to CRC VM running in hyperkit, then i would appretiate your contribution to this project.
+- MacOS ( Need more tests )
 
 ### CRC / OC Binaries
 - Download CRC and OC binaries from [cloud.redhat.com]((https://cloud.redhat.com/openshift/create/local)
 - Create CRC directlry `mkdir ~/.crc`
 - Also get CRC pull secret from [cloud.redhat.com]((https://cloud.redhat.com/openshift/create/local) and save it as `~/.crc/pull-secret.txt`
-## Step -1 ::  Deploy CRC
+## Step -1 ::  Deploy CRC - Linux
 ### Watch Demo Video [here](https://www.youtube.com/watch?v=mae0tiLkQag)
 
 Note : If you have already deployed CRC using [OpenSpot](https://github.com/ksingh7/openspot) project, you can skip step-1 and move directly to [step-2](https://github.com/ksingh7/odf-nano#step--2--deploy-odf-nano-on-crc)
@@ -51,7 +50,7 @@ crc console --credentials  > crc-creds.txt
 ```
 - Access https://console-openshift-console.apps-crc.testing from client machine
 
-## Step -2 :: Deploy ODF-Nano on CRC
+## Step -2 :: Deploy ODF-Nano on CRC - Linux
 ### Prerequisites
 - SSH into the host machine running CRC VM
 - Create a few raw devices that `ODF-Nano` will use
@@ -98,6 +97,66 @@ crc start
 ```
 crcssh lsblk
 ```
+
+## Step -1 ::  Deploy CRC - MACOS
+### Watch Demo Video [here](https://www.youtube.com/watch?v=mae0tiLkQag)
+
+```
+mkdir ~/.crc
+cd ~/.crc
+# Get CRC pull secret from [cloud.redhat.com]((https://cloud.redhat.com/openshift/create/local) and save it as `~/.crc/pull-secret.txt`
+crc config set consent-telemetry no
+crc config set enable-cluster-monitoring true # Enable only if you have enough memory, needs ~4G extra
+crc config set cpus 9 #Change as per your HW config
+crc config set memory 32768 #Change as per your HW config
+crc config set disk-size 250 #Don't worry this is thin provisioned
+crc config set pull-secret-file ~/.crc/pull-secret.txt
+crc config view
+crc setup
+alias crcssh='ssh -p 2222 -i ~/.crc/machines/crc/id_ecdsa core@"$(crc ip)"'
+crc start
+crcssh uptime
+crc console --credentials  > crc-creds.txt
+```
+- Access https://console-openshift-console.apps-crc.testing from client machine
+
+## Step -2 :: Deploy ODF-Nano on CRC - MACOS
+### Prerequisites
+- SSH into the host machine running CRC VM
+- Create a few loopback devices that `ODF-Nano` will use
+```
+## Don't worry this is thin provisioned
+sudo -i
+mkdir -p /var/lib/storage
+truncate --size 220G /var/lib/storage/disk1
+losetup -P /dev/loop1 /var/lib/storage/disk1
+pvcreate /dev/loop1
+vgcreate odf /dev/loop1
+lvcreate -n disk1 -L 105G odf
+lvcreate -n disk2 -L 105G odf
+
+lsblk
+
+cat << EOF > /etc/systemd/system/lvm-odf-losetup.service
+[Unit]
+Description=LVM ODF loopback device setup
+DefaultDependencies=no
+Conflicts=umount.target
+Requires=lvm2-lvmetad.service systemd-udev-settle.service
+Before=local-fs.target umount.target
+After=lvm2-lvmetad.service systemd-udev-settle.service
+[Service]
+Type=oneshot
+ExecStart=/sbin/losetup -P /dev/loop1 /var/lib/storage/disk1
+ExecStop=/sbin/losetup -d /dev/loop1
+RemainAfterExit=yes
+[Install]
+WantedBy=local-fs-pre.target
+EOF
+
+systemctl enable lvm-odf-losetup
+```
+
 ### Deploy ODF-Naon  on CRC
 
 -  Login to CRC using `kubeadmin`
@@ -107,7 +166,7 @@ crcssh lsblk
 ```
 git clone https://github.com/ksingh7/odf-nano.git
 cd odf-nano
-sh deploy_odf.sh
+sh deploy_odf_macos.sh
 ```
 - Sample output
 ```
