@@ -27,6 +27,7 @@ tldr; Watch introduction & Demo Video [here](https://www.youtube.com/watch?v=mae
 ### CRC / OC Binaries
 - Download CRC and OC binaries from [cloud.redhat.com]((https://cloud.redhat.com/openshift/create/local)
 - Create CRC directlry `mkdir ~/.crc`
+- configure crcssh `./configure_crcssh.sh`
 - Also get CRC pull secret from [cloud.redhat.com]((https://cloud.redhat.com/openshift/create/local) and save it as `~/.crc/pull-secret.txt`
 ## Step -1 ::  Deploy CRC - Linux
 ### Watch Demo Video [here](https://www.youtube.com/watch?v=mae0tiLkQag)
@@ -54,6 +55,7 @@ crc console --credentials  > crc-creds.txt
 ### Prerequisites
 - SSH into the host machine running CRC VM
 - Create a few raw devices that `ODF-Nano` will use
+- You can also run `./generate_volumes.sh`
 ```
 ## Don't worry this is thin provisioned
 sudo -S qemu-img create -f raw ~/.crc/vdb 100G
@@ -199,6 +201,11 @@ ODF is installed now
 oc get sc
 ```
 - You now have File/Block/Object Persistent Storage Classes from ODF. Deploy and Test your app locally, like you do in production (OCP & ODF)
+
+- Optional: Define default storage class
+```
+ oc patch storageclass ocs-storagecluster-ceph-rbd  -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}
+```
 
 ![ODF Storage Classes](assets/odf-sc.png)
 # Miscelleanous 
