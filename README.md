@@ -68,7 +68,7 @@ sudo virsh dumpxml crc > ~/crc.xml
 vim ~/crc.xml
 ```
 - Add the following section to `crc.xml`
-- Make sure to set the correct disk path
+- Make sure to set the correct disk path - check if the bus is not in use
 ```
     <disk type='file' device='disk'>
       <driver name='qemu' type='raw' cache='none'/>
@@ -76,7 +76,7 @@ vim ~/crc.xml
       <backingStore/>
       <target dev='vdb' bus='virtio'/>
       <alias name='virtio-disk1'/>
-      <address type='pci' domain='0x0000' bus='0x05' slot='0x00' function='0x0'/>
+      <address type='pci' domain='0x0000' bus='0x06' slot='0x00' function='0x0'/>
     </disk>
     <disk type='file' device='disk'>
       <driver name='qemu' type='raw' cache='none'/>
@@ -84,7 +84,7 @@ vim ~/crc.xml
       <backingStore/>
       <target dev='vdc' bus='virtio'/>
       <alias name='virtio-disk2'/>
-      <address type='pci' domain='0x0000' bus='0x06' slot='0x00' function='0x0'/>
+      <address type='pci' domain='0x0000' bus='0x07' slot='0x00' function='0x0'/>
     </disk>
 ```
 - Apply XML file and start CRC
