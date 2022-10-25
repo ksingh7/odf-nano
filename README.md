@@ -20,7 +20,7 @@ tldr; Watch introduction & Demo Video [here](https://www.youtube.com/watch?v=mae
 ## Prerequisites
 ### Host OS 
 - RHEL 8, 
-- Fedora 34 (tested) [ Feel free to test with other releases ]
+- Fedora 34,36 (tested) [ Feel free to test with other releases ]
 - Ubuntu 20.04 (tested) [ Feel free to test with other releases ]
 - MacOS ( Need more tests )
 
@@ -39,7 +39,7 @@ cd ~/.crc
 crc config set consent-telemetry no
 crc config set enable-cluster-monitoring true # Enable only if you have enough memory, needs ~4G extra
 crc config set cpus 15 #Change as per your HW config
-crc config set memory 60000 #Change as per your HW config
+crc config set memory 16000 # 16 GB - Change as per your HW config
 crc config set pull-secret-file ~/.crc/pull-secret.txt
 crc config view
 crc setup
@@ -52,7 +52,7 @@ crc console --credentials  > crc-creds.txt
 
 ## Step -2 :: Deploy ODF-Nano on CRC - Linux
 ### Prerequisites
-- SSH into the host machine running CRC VM
+- SSH into the host machine where the CRC VM is running ( or just open a shell if you're on the machine)
 - Create a few raw devices that `ODF-Nano` will use
 ```
 ## Don't worry this is thin provisioned
