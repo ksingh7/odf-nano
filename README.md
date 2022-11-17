@@ -64,33 +64,8 @@ sudo -S qemu-img create -f raw ~/.crc/vdc 100G
 ```
 crc stop
 sudo virsh list --all
-sudo virsh dumpxml crc > ~/crc.xml
-vim ~/crc.xml
-```
-- Add the following section to `crc.xml`
-- Make sure to set the correct disk path
-```
-    <disk type='file' device='disk'>
-      <driver name='qemu' type='raw' cache='none'/>
-      <source file='~/.crc/vdb' index='1'/>
-      <backingStore/>
-      <target dev='vdb' bus='virtio'/>
-      <alias name='virtio-disk1'/>
-      <address type='pci' domain='0x0000' bus='0x05' slot='0x00' function='0x0'/>
-    </disk>
-    <disk type='file' device='disk'>
-      <driver name='qemu' type='raw' cache='none'/>
-      <source file='~/.crc/vdc' index='2'/>
-      <backingStore/>
-      <target dev='vdc' bus='virtio'/>
-      <alias name='virtio-disk2'/>
-      <address type='pci' domain='0x0000' bus='0x06' slot='0x00' function='0x0'/>
-    </disk>
-```
-- Apply XML file and start CRC
-```
-sed -i "s|~|$HOME|g" ~/crc.xml
-sudo virsh define ~/crc.xml
+sudo virsh attach-disk crc --source ~/.crc/vdb --target vdb --persistent --address pci:0x0000:0x05:0x00:0x0
+sudo virsh attach-disk crc --source ~/.crc/vdc --target vdc --persistent --address pci:0x0000:0x06:0x00:0x0
 crc start
 ```
 - List devices to verify
